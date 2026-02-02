@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Upgrade Cost Calculator</title>
+  <style>
+    :root{
+      --bg:#071a2b;
+      --panel:#0c2742;
+      --panel2:#0a223a;
+      --line:rgba(255,215,120,.18);
+      --text:rgba(255,255,255,.88);
+      --muted:rgba(255,255,255,.62);
+      --gold:#ffd17a;
+      --gold2:#ffbf4d;
+      --blue:#2aa3ff;
+      --bad:#ff6b6b;
+      --ok:#4ee59a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(42,163,255,.18), transparent 60%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(255,209,122,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .topbar{
+      position:sticky; top:0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px;
+      background: rgba(6,18,30,.85);
+      border-bottom:1px solid var(--line);
+      backdrop-filter: blur(10px);
+      z-index:50;
+    }
+    .brand{display:flex; gap:10px; align-items:baseline;}
+    .brand h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.3px;
+      color:var(--gold);
+      font-weight:700;
+    }
+    .brand .sub{font-size:12px;color:var(--muted)}
+    .tabs{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .tabbtn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:12px;
+      font-weight:600;
+      font-size:13px;
+      transition:.15s transform, .15s border-color, .15s background;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .tabbtn:hover{transform:translateY(-1px); border-color:rgba(255,209,122,.35)}
+    .tabbtn.active{
+      border-color:rgba(255,209,122,.55);
+      background: linear-gradient(180deg, rgba(255,209,122,.16), rgba(255,255,255,.03));
+      color:var(--gold);
+    }
+
+    .wrap{max-width:1200px; margin:0 auto; padding:18px;}
+    .grid{
+      display:grid;
+      grid-template-columns: 360px 420px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 1100px){ .grid{grid-template-columns:1fr;} }
+
+    .card{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+    .card .hd{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:center;
+      background: linear-gradient(180deg, rgba(255,209,122,.10), rgba(255,255,255,.01));
+      gap:10px;
+    }
+    .card .hd .t{
+      font-weight:800; color:var(--gold);
+      letter-spacing:.2px;
+      font-size:13px;
+    }
+    .card .hd .hint{font-size:12px; color:var(--muted)}
+    .card .bd{padding:14px;}
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+    input, select, textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(3,10,18,.55);
+      color:var(--text);
+      outline:none;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(42,163,255,.55);
+      box-shadow: 0 0 0 3px rgba(42,163,255,.15);
+    }
+    .row{display:flex; gap:10px;}
+    .row > *{flex:1;}
+    .mini{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.35}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .chkrow{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:12px;
+      background: rgba(255,255,255,.02);
+      margin-top:8px;
+      gap:10px;
+    }
+    .chkrow input[type="checkbox"]{width:auto; transform:scale(1.05)}
+    .warn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,107,107,.35);
+      background: rgba(255,107,107,.08);
+      color: rgba(255,255,255,.86);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .ok{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(78,229,154,.30);
+      background: rgba(78,229,154,.08);
+      color: rgba(255,255,255,.86);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .mutedbox{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .log{
+      height: 560px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .log h3{
+      margin:0 0 10px 0; font-size:14px; color:var(--gold);
+    }
+    .log .sec{margin-bottom:14px;}
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:8px 12px;
+      align-items:baseline;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      border-radius:14px;
+    }
+    .kv .k{color:var(--muted); font-size:12px;}
+    .kv .v{font-weight:700; font-size:12px;}
+    .kv .v.gold{color:var(--gold)}
+    .kv .v.blue{color:var(--blue)}
+    .smalltable{
+      width:100%;
+      border-collapse: collapse;
+      font-size:12px;
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .smalltable th, .smalltable td{
+      padding:9px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      text-align:left;
+      vertical-align:top;
+    }
+    .smalltable th{
+      color:var(--gold);
+      font-weight:800;
+      background: rgba(255,209,122,.08);
+    }
+    .smalltable tr:last-child td{border-bottom:none;}
+    .right{ text-align:right; }
+
+    .page{display:none;}
+    .page.active{display:block;}
+
+    .chartwrap{
+      overflow:auto;
+      max-height: 420px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .credits{ min-height:120px; }
+
+    .btnrow{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;}
+    .btn{
+      cursor:pointer;
+      border:none;
+      background: linear-gradient(180deg, rgba(255,209,122,.22), rgba(255,191,77,.10));
+      border:1px solid rgba(255,209,122,.40);
+      color: rgba(255,255,255,.92);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      font-size:13px;
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.14);
+      font-weight:700;
+      color:var(--muted);
+    }
+    .btn:active{transform: translateY(1px);}
+    .note{font-size:12px; color:var(--muted); margin-top:8px; line-height:1.35;}
+
+    /* Page 3 */
+    .summarygrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 1100px){ .summarygrid{grid-template-columns:1fr;} }
+    .itemHead{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      flex-wrap:wrap;
+    }
+    .toggleline{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .inline{
+      display:flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--muted);
+    }
+    .inline input[type="checkbox"]{width:auto}
+    .thin{
+      font-size:12px; color:var(--muted);
+      line-height:1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <h1>Harpagia Upgrade Cost Calculator</h1>
+      <div class="sub">average-cost math (no RNG sims)</div>
+    </div>
+    <div class="tabs">
+      <div class="tabbtn active" data-tab="calc">Cost Calculator</div>
+      <div class="tabbtn" data-tab="stats">View Stats</div>
+      <div class="tabbtn" data-tab="summary">Full Summary</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- PAGE 1 -->
+    <div class="page active" id="page-calc">
+      <div class="grid">
+        <!-- BOX 1 -->
+        <div class="card">
+          <div class="hd">
+            <div class="t">Box 1 — Boost + Resource Reduction</div>
+            <div class="hint">global inputs</div>
+          </div>
+          <div class="bd">
+            <label>Item upgrade boost (multiplier)</label>
+            <input id="inpBoost" type="text" placeholder="e.g. 3.77x" />
+            <div class="mini">Multiplies base upgrade chance table (capped at 100%).</div>
+
+            <div style="height:12px"></div>
+
+            <label>Base camp resource efficiency level (0–20)</label>
+            <input id="inpCampLvl" type="number" min="0" max="20" value="0" />
+            <div class="mini">0 = 1.00x, 20 = 0.80x (linear).</div>
+
+            <div class="chkrow">
+              <div>
+                <div style="font-weight:800; color:var(--text); font-size:12px;">Charm of Efficiency</div>
+                <div class="mini">0.50x if owned</div>
+              </div>
+              <input id="chkCharm" type="checkbox" />
+            </div>
+
+            <div class="chkrow">
+              <div>
+                <div style="font-weight:800; color:var(--text); font-size:12px;">Medium Achievement Tier</div>
+                <div class="mini">0.98x if owned</div>
+              </div>
+              <input id="chkMedium" type="checkbox" />
+            </div>
+
+            <div class="chkrow">
+              <div>
+                <div style="font-weight:800; color:var(--text); font-size:12px;">Artisan Blessing</div>
+                <div class="mini">0.95x if owned and used</div>
+              </div>
+              <input id="chkArtisan" type="checkbox" />
+            </div>
+
+            <div style="height:12px"></div>
+            <div class="kv">
+              <div class="k">Total resource cost reduction multiplier</div>
+              <div class="v gold" id="outReduction">1.0000x</div>
+              <div class="v" style="color:var(--muted)">0.3724x</div>
+            </div>
+
+            <div class="btnrow">
+              <button class="btn" id="btnRecalc">Recalculate</button>
+              <button class="btn secondary" id="btnReset">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOX 2 -->
+        <div class="card">
+          <div class="hd">
+            <div class="t">Box 2 — Item + Level Range</div>
+            <div class="hint">what you’re upgrading</div>
+          </div>
+          <div class="bd">
+            <label>Select item</label>
+            <select id="selItem"></select>
+
+            <div style="height:10px"></div>
+            <div id="aetherNote" class="ok" style="display:none;">
+              Aether Blade upgrade chance 100% — Item upgrade boost ignored.
+            </div>
+            <div id="primordialNote" class="ok" style="display:none;">
+              Primordial Amulet merge cost (5,000,000 Amulet Fragments)
+              is included <strong>only</strong> if one or more base amulets
+              (Power, Speed, Weaponry, Defence) are selected.
+            </div>
+
+
+            <div style="height:10px"></div>
+            <div id="levelsArea"></div>
+
+            <div class="mini">
+              If current is 14 and target is 20, it charges levels 15→20.
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COL -->
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <!-- BOX 3 -->
+          <div class="card">
+            <div class="hd">
+              <div class="t">Box 3 — KPH + Loot Multiplier</div>
+              <div class="hint">only some items</div>
+            </div>
+            <div class="bd">
+              <div id="kphUnsupported" class="mutedbox">
+                This feature is unsupported for this item.
+              </div>
+
+              <div id="kphInputs" style="display:none;">
+                <div class="row">
+                  <div>
+                    <label>Kills per hour</label>
+                    <input id="inpKPH" type="number" min="0" step="1" placeholder="e.g. 550" />
+                  </div>
+                  <div>
+                    <label>Loot multiplier</label>
+                    <input id="inpLootMult" type="text" placeholder="e.g. 7.34x" />
+                  </div>
+                </div>
+                <div class="mini">Loot/time uses exactly one loot resource per supported item (gold ignored here).</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOX 4 -->
+          <div class="card" style="flex:1;">
+            <div class="hd">
+              <div class="t">Box 4 — Output Log</div>
+              <div class="hint">totals + breakdown</div>
+            </div>
+            <div class="bd">
+              <div class="log" id="outputLog"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page" id="page-stats">
+      <div class="grid" style="grid-template-columns: 380px 1fr 420px;">
+        <div class="card">
+          <div class="hd">
+            <div class="t">Inputs Summary</div>
+          </div>
+          <div class="bd" id="statsSummary"></div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <div class="t" id="chartTitle">Item Upgrade Chance</div>
+            <div class="hint">2–20</div>
+          </div>
+          <div class="bd">
+            <div class="chartwrap">
+              <table class="smalltable" id="chanceTable">
+                <thead>
+                  <tr>
+                    <th>Level</th>
+                    <th class="right">Base Chance</th>
+                    <th class="right">Your upgrade chance</th>
+                    <th class="right">Avg attempts</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="mini" style="margin-top:10px;">
+              Avg attempts uses 1/p, with p capped at 100%.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <div class="t">Credits / Notes</div>
+            <div class="hint">info</div>
+          </div>
+          <div class="bd">
+            <div id="creditsBox" class="credits">
+              <p><strong>Calculator by:</strong> BienChien</p>
+              <p>
+                Built as an average-cost calculator (no RNG simulation).
+                All values based on in-game data and expected attempts.
+              </p>
+              <p>
+                Major credits to @poppabear, @gl_crowd, @albino for helping to provide data collection. @SacD12eDz, @AeschyA for supporting the project, and of course @Atlas, @YoMikey for checking for bugs, testing data and all around being present while I attempted to make this.
+              </p>
+              <p>
+                Your contributions saved me countless hours in the grind to get here. Thank you for your support and help.
+              </p>
+              <p>
+                Special thanks to my own sanity for surviving this project.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div class="page" id="page-summary">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="hd">
+          <div class="t">Full Summary</div>
+          <div class="hint">quick-view for all items</div>
+        </div>
+        <div class="bd">
+          <div class="mutedbox">
+            <p style="margin:0 0 6px 0;">
+              Defaults assume full upgrade range (usually 1→20, Aether 1→40).
+              Toggle “Enable level x–y” per item to customize.
+              Loot/time fields appear only for loot-supported items.
+            </p>
+            <p style="margin:0;">
+              <strong>Primordial note:</strong>
+              The 5,000,000 Amulet Fragment merge cost is applied
+              <em>only</em> when at least one base amulet
+              (Power, Speed, Weaponry, or Defence) is enabled.
+            </p>
+          </div>
+
+          <div class="btnrow">
+            <button class="btn" id="btnSummaryRefresh">Refresh Summary</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="summarygrid" id="summaryGrid"></div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   BASE CHANCE TABLE (level 2..20)
+   ========================= */
+const BASE_CHANCE = {
+  2: 0.40, 3: 0.36, 4: 0.32, 5: 0.28, 6: 0.24, 7: 0.20, 8: 0.16, 9: 0.12, 10: 0.08,
+  11: 0.05, 12: 0.04, 13: 0.03, 14: 0.02, 15: 0.01, 16: 0.005, 17: 0.003, 18: 0.0025,
+  19: 0.0020, 20: 0.0015
+};
+
+/* =========================
+   ITEMS + RULES
+   lootResource: the ONE resource used for loot/time (gold ignored)
+   ========================= */
+const ITEMS = [
+  { key:"abyssal_gear",  name:"Abyssal Gear", multi:true,  kph:false, special:"ratio3" },
+  { key:"aether_blade",  name:"Aether Blade", multi:false, kph:false, special:"aether" },
+  { key:"primordial_amulet", name:"Primordial Amulet", multi:true, kph:true, special:"primordial5",
+    lootResource:"Amulet Fragments", lootPerKill: { "Amulet Fragments": 62.5 } },
+  { key:"keris_dagger",  name:"Keris Dagger", multi:false, kph:false },
+  { key:"abyssal_greataxe", name:"Abyssal Greataxe", multi:false, kph:true,
+    lootResource:"Abyssal Shards", lootPerKill:{ "Abyssal Shards":0.0396 } },
+  { key:"swift_blade",   name:"Swift Blade", multi:false, kph:true,
+    lootResource:"Anubian Shards", lootPerKill:{ "Anubian Shards":675 } },
+  { key:"viridian_gear", name:"Viridian Gear", multi:true, kph:true, special:"viridian3",
+    lootResource:"Viridian Shards", lootPerKill:{ "Viridian Shards":0.0396 } },
+  { key:"dreadfang_shiv", name:"Dreadfang Shiv", multi:false, kph:true,
+    lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 } }
+];
+
+/* =========================
+   COST DATA PLACEHOLDERS
+   costData[itemKey][partKey][level] = { "Resource": amountPerAttempt, ... }
+   ========================= */
+const costData = {
+  keris_dagger: { main: {} },
+  abyssal_greataxe: { main: {} },
+  swift_blade: { main: {} },
+  dreadfang_shiv: { main: {} },
+  aether_blade: { main: {} },
+  viridian_gear: { helmet: {}, greaves: {}, chestplate: {} },
+  abyssal_gear: { helmet: {} },
+  primordial_amulet: { base_amulet: {}, primordial: {} }
+};
+
+// ====== PASTE DATA HERE ZONES (search this comment later) ======
+//
+// 1) Keris Dagger: costData.keris_dagger.main[level] = { ... }
+// Keris Dagger — costs for levels 2..20 (target level)
+(() => {
+  const gold = [
+    95000000, 125000000, 160000000, 200000000, 235000000,
+    310000000, 370000000, 435000000, 500000000, 570000000,
+    640000000, 720000000, 800000000, 910000000, 1020000000,
+    1140000000, 1275000000, 1430000000, 1600000000
+  ];
+
+  const orichalcumComponents = [
+    3160, 4180, 5000, 9930, 13100,
+    16250, 19400, 22600, 25700, 28900,
+    72200, 85700, 108300, 140800, 180400,
+    230000, 288700, 356000, 433000
+  ];
+
+  const eldritch = [
+    23100, 28100, 33900, 41000, 49000,
+    58000, 69000, 81000, 96000, 113000,
+    133000, 155000, 182000, 212000, 247000,
+    287000, 334000, 387000, 449000
+  ];
+
+  const voidstone = [
+    20000, 24000, 29000, 35000, 42000,
+    50000, 60000, 71000, 83000, 98000,
+    115000, 135000, 157000, 184000, 214000,
+    249000, 289000, 335000, 389000
+  ];
+
+  const orichalcum = [
+    16700, 21000, 25000, 30000, 36000,
+    43000, 50000, 60000, 70000, 83000,
+    97000, 114000, 133000, 155000, 181000,
+    211000, 245000, 284000, 329000
+  ];
+
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+    costData.keris_dagger.main[level] = {
+      "Gold": gold[i],
+      "Orichalcum Components": orichalcumComponents[i],
+      "Eldritch": eldritch[i],
+      "Voidstone": voidstone[i],
+      "Orichalcum": orichalcum[i]
+    };
+  }
+})();
+
+// 2) Abyssal Greataxe: costData.abyssal_greataxe.main[level] = { ... }
+// Abyssal Greataxe — costs for levels 2..20 (target level)
+(() => {
+  const shards = [
+    5, 8, 11, 13, 16,
+    19, 21, 24, 30, 32,
+    35, 38, 40, 43, 46,
+    48, 51, 56, 59
+  ];
+
+  const components = [
+    10000, 20000, 30000, 40000, 50000,
+    60000, 70000, 80000, 90000, 100000,
+    110000, 120000, 130000, 140000, 150000,
+    160000, 170000, 180000, 190000
+  ];
+
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+    costData.abyssal_greataxe.main[level] = {
+      "Abyssal Shards": shards[i],
+      "Abyssal Components": components[i]
+    };
+  }
+})();
+
+// 3) Swift Blade: costData.swift_blade.main[level] = { ... }
+// Swift Blade (Anubian Shards) — costs for levels 2..20 (target level)
+(() => {
+  const costs = [
+    35000, 70000, 105000, 140000, 175000, 210000, 245000, 280000, 315000,
+    350000, 385000, 420000, 455000, 490000, 525000, 560000, 595000, 630000, 665000
+  ];
+
+  // level 2 corresponds to costs[0], ... level 20 corresponds to costs[18]
+  for (let i = 0; i < costs.length; i++){
+    const level = 2 + i;
+    costData.swift_blade.main[level] = { "Anubian Shards": costs[i] };
+  }
+})();
+
+// 4) Dreadfang Shiv: costData.dreadfang_shiv.main[level] = { ... }
+// Dreadfang Shiv — costs for levels 2..20 (target level)
+// NOTE: Stored as "Dreadfang Fragments" for consistency with loot/KPH naming.
+(() => {
+  const costs = [
+    20000, 35000, 55000, 80000, 115000,
+    155000, 200000, 250000, 305000, 365000,
+    430000, 500000, 575000, 655000, 740000,
+    830000, 925000, 1025000, 1130000
+  ];
+
+  for (let i = 0; i < costs.length; i++){
+    const level = 2 + i;
+    costData.dreadfang_shiv.main[level] = { "Dreadfang Fragments": costs[i] };
+  }
+})();
+
+// 5) Aether Blade (2..40): costData.aether_blade.main[level] = { "Aether Shards": ... }
+// Aether Blade (Aether Shards) — costs for levels 2..40 (target level)
+(() => {
+  const costs = [
+    500, 1200, 2500, 5000, 9000, 15000, 25000, 40000, 60000, 85000,
+    115000, 150000, 190000, 240000, 300000, 375000, 470000, 580000, 710000, 870000,
+    1050000, 1260000, 1500000, 1800000, 2200000, 2700000, 3300000, 4000000, 4800000, 5700000,
+    6700000, 7800000, 9000000, 10300000, 11800000, 13400000, 15100000, 16900000, 19000000
+  ];
+
+  // level 2 corresponds to costs[0], ... level 40 corresponds to costs[38]
+  for (let i = 0; i < costs.length; i++){
+    const level = 2 + i;
+    costData.aether_blade.main[level] = { "Aether Shards": costs[i] };
+  }
+})();
+
+// 6) Viridian Helmet/Greaves/Chest: costData.viridian_gear.helmet[level], etc.
+// Viridian Gear — Helmet / Greaves / Chestplate costs (levels 2..20)
+(() => {
+  const helmet = [
+    3, 3, 5, 5, 5,
+    8, 8, 8, 11, 11,
+    13, 13, 13, 16, 16,
+    16, 19, 19, 21
+  ];
+
+  const greaves = [
+    3, 5, 8, 8, 11,
+    13, 16, 16, 19, 21,
+    24, 24, 27, 30, 32,
+    32, 35, 38, 40
+  ];
+
+  const chestplate = [
+    5, 8, 11, 13, 16,
+    19, 21, 24, 30, 32,
+    35, 38, 40, 43, 46,
+    48, 51, 56, 59
+  ];
+
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+
+    costData.viridian_gear.helmet[level] = {
+      "Viridian Shards": helmet[i]
+    };
+
+    costData.viridian_gear.greaves[level] = {
+      "Viridian Shards": greaves[i]
+    };
+
+    costData.viridian_gear.chestplate[level] = {
+      "Viridian Shards": chestplate[i]
+    };
+  }
+})();
+
+// 7) Abyssal Helmet ONLY: costData.abyssal_gear.helmet[level] = { "Gold":..., "Abyssal Components":..., "Eldritch":..., "Voidstone":..., "Orichalcum":... }
+// Abyssal Gear — Helmet costs (levels 2..20)
+(() => {
+  const gold = [
+    345000000, 465000000, 595000000, 735000000, 880000000,
+    1145000000, 1380000000, 1615000000, 1855000000,
+    2110000000, 2385000000, 2685000000, 3005000000,
+    3385000000, 3785000000, 4215000000, 4725000000,
+    5290000000, 5935000000
+  ];
+
+  const abyssal = [
+    100, 130, 160, 310, 410, 510, 610, 710, 810,
+    910, 2250, 2700, 3400, 4400, 5600, 7200,
+    9000, 11100, 13500
+  ];
+
+  const eldritch = [
+    700, 840, 1000, 1200, 1450, 1730, 2050, 2400, 2850,
+    3370, 3950, 4620, 5400, 6300, 7350, 8550,
+    9940, 11500, 13350
+  ];
+
+  const voidstone = [
+    600, 720, 870, 1050, 1250, 1500, 1780, 2100, 2500,
+    2900, 3420, 4000, 4680, 5460, 6370, 7400,
+    8600, 10000, 11580
+  ];
+
+  const orichalcum = [
+    500, 600, 750, 900, 1060, 1270, 1500, 1780, 2100,
+    2500, 2900, 3400, 4000, 4600, 5400, 6300,
+    7300, 8450, 9800
+  ];
+
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+    costData.abyssal_gear.helmet[level] = {
+      "Gold": gold[i],
+      "Abyssal Components": abyssal[i],
+      "Eldritch": eldritch[i],
+      "Voidstone": voidstone[i],
+      "Orichalcum": orichalcum[i]
+    };
+  }
+})();
+
+// 8) Primordial:
+//    - Base amulets: costData.primordial_amulet.base_amulet[level] = { "Gold":..., "Amulet Fragments":... }
+//    - Primordial:  costData.primordial_amulet.primordial[level]  = { "Gold":..., "Amulet Fragments":... }
+// Primordial Amulet — Base amulets + Primordial costs (levels 2..20)
+// NOTE: Stored as "Amulet Fragments" to match loot/KPH + merge logic naming.
+(() => {
+  // Base amulet (Power/Speed/Weaponry/Defence all share this table)
+  const baseGold = [
+    100000000, 130000000, 170000000, 220000000, 290000000,
+    370000000, 480000000, 630000000, 810000000, 1060000000,
+    1380000000, 1790000000, 2330000000, 3030000000, 3920000000,
+    5100000000, 6660000000, 8650000000, 11220000000
+  ];
+
+  const baseFrags = [
+    1200, 1440, 1730, 2070, 2500, 3000, 3600, 4300, 5150,
+    6200, 7400, 8900, 10700, 12800, 15400, 18500,
+    22200, 26600, 31900
+  ];
+
+  // Primordial itself
+  const primGold = [
+    150000000, 210000000, 290000000, 410000000, 580000000,
+    800000000, 1130000000, 1580000000, 2200000000, 3100000000,
+    4300000000, 6100000000, 8500000000, 11900000000, 16650000000,
+    23300000000, 32600000000, 45700000000, 64000000000
+  ];
+
+  const primFrags = [
+    1800, 2340, 3040, 3950, 5140, 6700, 8700, 11300, 14700,
+    19100, 24800, 32200, 42900, 54500, 70800, 92000,
+    120000, 155000, 200000
+  ];
+
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+
+    costData.primordial_amulet.base_amulet[level] = {
+      "Gold": baseGold[i],
+      "Amulet Fragments": baseFrags[i]
+    };
+
+    costData.primordial_amulet.primordial[level] = {
+      "Gold": primGold[i],
+      "Amulet Fragments": primFrags[i]
+    };
+  }
+})();
+
+// =============================================================
+
+/* =========================
+   UTILS
+   ========================= */
+function parseMult(str, fallback=1){
+  if (typeof str !== "string") return fallback;
+  const s = str.trim().toLowerCase().replace(/×/g,'x');
+  if (!s) return fallback;
+  const m = s.endsWith('x') ? s.slice(0,-1) : s;
+  const v = Number(m);
+  return Number.isFinite(v) && v > 0 ? v : fallback;
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function fmtNum(n){
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  if (abs >= 1e12) return (n/1e12).toFixed(3).replace(/\.?0+$/,'') + "T";
+  if (abs >= 1e9) return (n/1e9).toFixed(3).replace(/\.?0+$/,'') + "B";
+  if (abs >= 1e6) return (n/1e6).toFixed(3).replace(/\.?0+$/,'') + "M";
+  if (abs >= 1e3) return (n/1e3).toFixed(3).replace(/\.?0+$/,'') + "K";
+  if (abs >= 10) return n.toFixed(2).replace(/\.?0+$/,'');
+  if (abs >= 1) return n.toFixed(3).replace(/\.?0+$/,'');
+  return n.toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+}
+function fmtPct(p){ return (p*100).toFixed(p<0.01?3:2).replace(/\.?0+$/,'') + "%"; }
+function durFromHours(hours){
+  if (!Number.isFinite(hours) || hours < 0) return "—";
+  const totalMin = Math.round(hours * 60);
+  const d = Math.floor(totalMin / (60*24));
+  const rem1 = totalMin - d*60*24;
+  const h = Math.floor(rem1 / 60);
+  const m = rem1 - h*60;
+  return `${d}d:${String(h).padStart(2,'0')}h:${String(m).padStart(2,'0')}m`;
+}
+function deepAddResource(map, res, amt){
+  if (!Number.isFinite(amt)) return;
+  map[res] = (map[res] || 0) + amt;
+}
+function sumResources(map){
+  return Object.values(map).reduce((a,b)=>a + (Number.isFinite(b)?b:0), 0);
+}
+
+/* =========================
+   DOM
+   ========================= */
+const selItem = document.getElementById("selItem");
+const levelsArea = document.getElementById("levelsArea");
+const outputLog = document.getElementById("outputLog");
+const aetherNote = document.getElementById("aetherNote");
+const primordialNote = document.getElementById("primordialNote");
+
+
+const inpBoost = document.getElementById("inpBoost");
+const inpCampLvl = document.getElementById("inpCampLvl");
+const chkCharm = document.getElementById("chkCharm");
+const chkMedium = document.getElementById("chkMedium");
+const chkArtisan = document.getElementById("chkArtisan");
+const outReduction = document.getElementById("outReduction");
+
+const kphUnsupported = document.getElementById("kphUnsupported");
+const kphInputs = document.getElementById("kphInputs");
+const inpKPH = document.getElementById("inpKPH");
+const inpLootMult = document.getElementById("inpLootMult");
+
+const statsSummary = document.getElementById("statsSummary");
+const chartTitle = document.getElementById("chartTitle");
+const chanceTableBody = document.querySelector("#chanceTable tbody");
+
+const summaryGrid = document.getElementById("summaryGrid");
+document.getElementById("btnSummaryRefresh").addEventListener("click", ()=>renderSummaryPage());
+
+document.getElementById("btnRecalc").addEventListener("click", () => recalcAll());
+document.getElementById("btnReset").addEventListener("click", () => resetAll());
+
+// NOTE: selItem change is handled specially to avoid the old “multi→single” stale UI calc bug.
+[inpBoost, inpCampLvl, chkCharm, chkMedium, chkArtisan, inpKPH, inpLootMult].forEach(el=>{
+  el.addEventListener("input", () => recalcAll());
+  el.addEventListener("change", () => recalcAll());
+});
+
+/* =========================
+   BUILD ITEM DROPDOWN
+   ========================= */
+function init(){
+  selItem.innerHTML = "";
+  for (const it of ITEMS){
+    const opt = document.createElement("option");
+    opt.value = it.key;
+    opt.textContent = it.name;
+    selItem.appendChild(opt);
+  }
+  selItem.value = "abyssal_gear";
+
+  // fix bug: rebuild first, then recalc (and do not also attach recalc listener on the select)
+  selItem.addEventListener("change", ()=>{
+    rebuildLevelInputs();
+    recalcAll();
+  });
+
+  rebuildLevelInputs();
+  recalcAll();
+}
+init();
+
+/* =========================
+   RESOURCE REDUCTION
+   ========================= */
+function getReductionMultiplier(){
+  const campLvl = clamp(Number(inpCampLvl.value || 0), 0, 20);
+  const campMult = 1 - (campLvl/20)*0.2; // 1.0 -> 0.8
+  const charm = chkCharm.checked ? 0.50 : 1.0;
+  const medium = chkMedium.checked ? 0.98 : 1.0;
+  const artisan = chkArtisan.checked ? 0.95 : 1.0;
+  const total = campMult * charm * medium * artisan;
+  return { campLvl, campMult, charm, medium, artisan, total };
+}
+
+/* =========================
+   LEVEL INPUTS (Box 2)
+   ========================= */
+function levelRangeBlock(partKey, label, defaultChecked=true, minLevel=1, maxLevel=20){
+  const wrap = document.createElement("div");
+  wrap.style.marginBottom = "10px";
+
+  const row = document.createElement("div");
+  row.className = "chkrow";
+
+  const left = document.createElement("div");
+  left.innerHTML = `<div style="font-weight:900; font-size:12px;">${label}</div>
+                    <div class="mini">Levels ${minLevel}–${maxLevel}</div>`;
+
+  const chk = document.createElement("input");
+  chk.type = "checkbox";
+  chk.checked = defaultChecked;
+  chk.dataset.part = partKey;
+
+  row.appendChild(left);
+  row.appendChild(chk);
+
+  const fields = document.createElement("div");
+  fields.className = "row";
+  fields.style.marginTop = "8px";
+
+  const a = document.createElement("div");
+  a.innerHTML = `<label>Current level</label>`;
+  const cur = document.createElement("input");
+  cur.type = "number";
+  cur.min = String(minLevel);
+  cur.max = String(maxLevel);
+  cur.value = String(minLevel);
+  cur.dataset.part = partKey;
+  cur.dataset.kind = "cur";
+
+  const b = document.createElement("div");
+  b.innerHTML = `<label>Target level</label>`;
+  const tgt = document.createElement("input");
+  tgt.type = "number";
+  tgt.min = String(minLevel);
+  tgt.max = String(maxLevel);
+  tgt.value = String(maxLevel);
+  tgt.dataset.part = partKey;
+  tgt.dataset.kind = "tgt";
+
+  a.appendChild(cur);
+  b.appendChild(tgt);
+  fields.appendChild(a);
+  fields.appendChild(b);
+
+  wrap.appendChild(row);
+  wrap.appendChild(fields);
+
+  [chk, cur, tgt].forEach(el=>{
+    el.addEventListener("change", () => recalcAll());
+    el.addEventListener("input", () => recalcAll());
+  });
+
+  return wrap;
+}
+
+function rebuildLevelInputs(){
+  const key = selItem.value;
+  const item = ITEMS.find(x=>x.key===key);
+  levelsArea.innerHTML = "";
+
+  aetherNote.style.display = (item?.special === "aether") ? "block" : "none";
+  primordialNote.style.display = (item?.key === "primordial_amulet") ? "block" : "none";
+
+  const kphSupported = !!item?.kph;
+  kphUnsupported.style.display = kphSupported ? "none" : "block";
+  kphInputs.style.display = kphSupported ? "block" : "none";
+
+  if (!item) return;
+
+  if (item.special === "ratio3"){
+    levelsArea.appendChild(levelRangeBlock("helmet", "Abyssal Helmet", true, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("greaves", "Abyssal Greaves", true, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("chestplate", "Abyssal Chestplate", true, 1, 20));
+    return;
+  }
+  if (item.special === "viridian3"){
+    levelsArea.appendChild(levelRangeBlock("helmet", "Viridian Helmet", true, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("greaves", "Viridian Greaves", true, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("chestplate", "Viridian Chestplate", true, 1, 20));
+    return;
+  }
+  if (item.special === "primordial5"){
+    levelsArea.appendChild(levelRangeBlock("power", "Power Amulet", false, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("speed", "Speed Amulet", false, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("weaponry", "Weaponry Amulet", false, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("defence", "Defence Amulet", false, 1, 20));
+    levelsArea.appendChild(levelRangeBlock("primordial", "Primordial Amulet", true, 1, 20));
+    return;
+  }
+  if (item.special === "aether"){
+    levelsArea.appendChild(levelRangeBlock("main", "Aether Blade", true, 1, 40));
+    return;
+  }
+  levelsArea.appendChild(levelRangeBlock("main", item.name, true, 1, 20));
+}
+
+/* =========================
+   CALC ENGINE
+   ========================= */
+function getUpgradeChanceForLevel(level, boostMult, itemKey){
+  if (itemKey === "aether_blade") return 1.0;
+  const base = BASE_CHANCE[level] ?? 0;
+  return clamp(base * boostMult, 0, 1);
+}
+function getExpectedAttempts(level, boostMult, itemKey){
+  const p = getUpgradeChanceForLevel(level, boostMult, itemKey);
+  if (p <= 0) return Infinity;
+  return 1 / p;
+}
+function prettyPartLabel(item, partKey){
+  if (!item) return partKey;
+  if (item.key === "abyssal_gear"){
+    if (partKey==="helmet") return "Abyssal Helmet";
+    if (partKey==="greaves") return "Abyssal Greaves";
+    if (partKey==="chestplate") return "Abyssal Chestplate";
+  }
+  if (item.key === "viridian_gear"){
+    if (partKey==="helmet") return "Viridian Helmet";
+    if (partKey==="greaves") return "Viridian Greaves";
+    if (partKey==="chestplate") return "Viridian Chestplate";
+  }
+  if (item.key === "primordial_amulet"){
+    if (partKey==="power") return "Power Amulet";
+    if (partKey==="speed") return "Speed Amulet";
+    if (partKey==="weaponry") return "Weaponry Amulet";
+    if (partKey==="defence") return "Defence Amulet";
+    if (partKey==="primordial") return "Primordial Amulet";
+  }
+  return item.name;
+}
+function getSelectedPartsFromContainer(containerEl, itemKey){
+  const item = ITEMS.find(x=>x.key===itemKey);
+  const blocks = Array.from(containerEl.querySelectorAll("input[data-part]"));
+  const byPart = new Map();
+  for (const el of blocks){
+    const part = el.dataset.part;
+    if (!byPart.has(part)) byPart.set(part, { partKey:part, enabled:true, cur:1, tgt:20, label:part });
+    const obj = byPart.get(part);
+    if (el.type === "checkbox"){ obj.enabled = el.checked; }
+    else if (el.dataset.kind === "cur"){ obj.cur = Number(el.value || 1); }
+    else if (el.dataset.kind === "tgt"){ obj.tgt = Number(el.value || 20); }
+  }
+  for (const obj of byPart.values()){
+    obj.label = prettyPartLabel(item, obj.partKey);
+  }
+  return Array.from(byPart.values());
+}
+function getCostTable(itemKey, partKey){
+  if (itemKey === "primordial_amulet"){
+    if (partKey === "primordial") return costData.primordial_amulet.primordial;
+    return costData.primordial_amulet.base_amulet;
+  }
+  if (itemKey === "abyssal_gear"){
+    return costData.abyssal_gear.helmet;
+  }
+  const item = costData[itemKey];
+  if (!item) return {};
+  return item[partKey] || item.main || {};
+}
+function applyAbyssalRatios(baseCostMap, partKey){
+  const out = {};
+  const isHelm = partKey === "helmet";
+  const isGreaves = partKey === "greaves";
+  const isChest = partKey === "chestplate";
+  const multFor = (res)=>{
+    const r = res.toLowerCase();
+    if (r.includes("gold")) return isHelm ? 1 : (isGreaves ? 5/4 : 6/4);
+    if (r.includes("abyssal components")) return isHelm ? 1 : (isGreaves ? 3/1 : 5/1);
+    if (r.includes("eldritch") || r.includes("voidstone") || r.includes("orichalcum")){
+      return isHelm ? 1 : (isGreaves ? 9/8 : 10/8);
+    }
+    return 1;
+  };
+  for (const [res, amt] of Object.entries(baseCostMap || {})){
+    out[res] = amt * multFor(res);
+  }
+  return out;
+}
+function calcForPart(itemKey, partKey, curLevel, tgtLevel, boostMult, reductionMult){
+  const minL = 1;
+  const maxL = (itemKey === "aether_blade") ? 40 : 20;
+  const cur = clamp(Math.floor(curLevel), minL, maxL);
+  const tgt = clamp(Math.floor(tgtLevel), minL, maxL);
+
+  const from = Math.min(cur, tgt);
+  const to = Math.max(cur, tgt);
+
+  const levels = [];
+  for (let L = from + 1; L <= to; L++) levels.push(L);
+
+  let totalAttempts = 0;
+  const resources = {};
+  const perLevel = [];
+
+  const costTable = getCostTable(itemKey, partKey);
+
+  for (const L of levels){
+    const p = getUpgradeChanceForLevel(L, boostMult, itemKey);
+    const attempts = (p>0) ? (1/p) : Infinity;
+    totalAttempts += Number.isFinite(attempts) ? attempts : 0;
+
+    let costMap = costTable[L] || null;
+    if (itemKey === "abyssal_gear"){
+      if (!costMap) costMap = {};
+      if (partKey !== "helmet"){
+        costMap = applyAbyssalRatios(costMap, partKey);
+      }
+    }
+
+    const expectedCostMap = {};
+    let levelCostTotal = 0;
+
+    for (const [res, amtPerAttempt] of Object.entries(costMap || {})){
+      const expAmt = amtPerAttempt * attempts * reductionMult;
+      expectedCostMap[res] = expAmt;
+      levelCostTotal += expAmt;
+      deepAddResource(resources, res, expAmt);
+    }
+
+    perLevel.push({
+      level: L,
+      chance: p,
+      attempts,
+      expectedCostMap,
+      levelCostTotal
+    });
+  }
+
+  return { cur, tgt, levels, totalAttempts, resources, perLevel };
+}
+
+/* =========================
+   PRIMORDIAL MERGE COST (flat, NOT reduced)
+   ========================= */
+function getPrimordialMergeExtraFlat(parts){
+  const anyBase = parts.some(p => ["power","speed","weaponry","defence"].includes(p.partKey) && p.enabled);
+  return anyBase ? 5_000_000 : 0;
+}
+
+/* =========================
+   KPH / LOOT CALCS (ONE resource only)
+   ========================= */
+function calcKPHSectionForItem(itemKey, totalResourcesNeeded, kph, lootMult){
+  const item = ITEMS.find(x=>x.key===itemKey);
+  if (!item || !item.kph) return null;
+
+  const lootRes = item.lootResource;
+  const basePerKill = (item.lootPerKill && item.lootPerKill[lootRes]) ? item.lootPerKill[lootRes] : 0;
+  const boostedPerKill = basePerKill * lootMult;
+
+  const required = totalResourcesNeeded[lootRes] || 0;
+  if (!(required > 0) || !(boostedPerKill > 0)){
+    return {
+      lootRes, basePerKill, boostedPerKill,
+      required, killsNeeded: 0,
+      lootPerHour: 0,
+      time: "—",
+      note: "Costs missing (or no matching required loot resource yet)."
+    };
+  }
+
+  const killsNeeded = required / boostedPerKill;
+  const lootPerHour = boostedPerKill * (kph > 0 ? kph : 0);
+  const hours = (kph > 0) ? (killsNeeded / kph) : Infinity;
+
+  return {
+    lootRes, basePerKill, boostedPerKill,
+    required, killsNeeded,
+    lootPerHour,
+    time: Number.isFinite(hours) ? durFromHours(hours) : "—",
+    note: ""
+  };
+}
+
+/* =========================
+   RENDER
+   ========================= */
+function recalcAll(){
+  const boostMult = parseMult(inpBoost.value, 1);
+  const red = getReductionMultiplier();
+  outReduction.textContent = red.total.toFixed(4) + "x";
+
+  renderStatsPage(boostMult, red);
+  renderCalculatorOutput(boostMult, red.total);
+
+  // keep page 3 feeling live-ish even if they don’t click refresh
+  renderSummaryPage(true);
+}
+
+function renderCalculatorOutput(boostMult, reductionMult){
+  const itemKey = selItem.value;
+  const item = ITEMS.find(x=>x.key===itemKey);
+  const parts = getSelectedPartsFromContainer(levelsArea, itemKey);
+
+  const partResults = [];
+  const totalsByRes = {};
+  let totalAttemptsAll = 0;
+
+  for (const p of parts){
+    if (!p.enabled) continue;
+    const res = calcForPart(itemKey, p.partKey, p.cur, p.tgt, boostMult, reductionMult);
+    partResults.push({ part:p, res });
+    totalAttemptsAll += res.totalAttempts;
+    for (const [r, amt] of Object.entries(res.resources)){
+      deepAddResource(totalsByRes, r, amt);
+    }
+  }
+
+  // Primordial merge extra: flat, not reduced
+  if (itemKey === "primordial_amulet"){
+    const extra = getPrimordialMergeExtraFlat(parts);
+    if (extra > 0){
+      deepAddResource(totalsByRes, "Amulet Fragments", extra);
+    }
+  }
+
+  // Optional KPH section (one resource only)
+  let kphSection = null;
+  if (item?.kph){
+    const kph = Number(inpKPH.value || 0);
+    const lootMult = parseMult(inpLootMult.value, 1);
+    kphSection = calcKPHSectionForItem(itemKey, totalsByRes, kph, lootMult);
+  }
+
+  outputLog.innerHTML = "";
+
+  const top = document.createElement("div");
+  top.className = "sec";
+  top.innerHTML = `
+    <h3>Totals</h3>
+    <div class="kv" style="margin-bottom:10px;">
+      <div class="k">Selected item</div><div class="v gold">${item?.name || "—"}</div>
+      <div class="k">Total average upgrade attempts</div><div class="v blue">${fmtNum(totalAttemptsAll)}</div>
+      <div class="k">Resource reduction multiplier applied</div><div class="v">${reductionMult.toFixed(4)}x</div>
+    </div>
+  `;
+  outputLog.appendChild(top);
+
+  const resBox = document.createElement("div");
+  resBox.className = "sec";
+  const resRows = Object.entries(totalsByRes)
+    .sort((a,b)=> b[1]-a[1])
+    .map(([r,amt])=> `<tr><td>${r}</td><td class="right">${fmtNum(amt)}</td></tr>`)
+    .join("");
+  resBox.innerHTML = `
+    <h3>Total resources required</h3>
+    <table class="smalltable">
+      <thead><tr><th>Resource</th><th class="right">Expected amount</th></tr></thead>
+      <tbody>${resRows || `<tr><td colspan="2" style="color:var(--muted)">No cost data pasted yet (placeholders are empty).</td></tr>`}</tbody>
+    </table>
+  `;
+  outputLog.appendChild(resBox);
+
+  if (item?.kph){
+    const kphWrap = document.createElement("div");
+    kphWrap.className = "sec";
+
+    const k = kphSection;
+    if (!k){
+      kphWrap.innerHTML = `<h3>Loot / time</h3><div class="mutedbox">No loot model available.</div>`;
+    } else {
+      const lootMult = parseMult(inpLootMult.value, 1);
+      const kph = Number(inpKPH.value || 0);
+      kphWrap.innerHTML = `
+        <h3>Loot / time (optional)</h3>
+        ${k.note ? `<div class="mutedbox" style="margin-bottom:10px;">${k.note}</div>` : ""}
+        <div class="kv" style="margin-bottom:10px;">
+          <div class="k">Loot resource</div><div class="v gold">${k.lootRes}</div>
+          <div class="k">Loot per kill</div><div class="v">${fmtNum(k.basePerKill)}</div>
+          <div class="k">Boosted loot per kill</div><div class="v">${fmtNum(k.boostedPerKill)} <span style="color:var(--muted); font-weight:600;">(${lootMult.toFixed(3)}x)</span></div>
+          <div class="k">Loot/hour</div><div class="v blue">${fmtNum(k.lootPerHour)} <span style="color:var(--muted); font-weight:600;">(@ ${fmtNum(kph)} KPH)</span></div>
+          <div class="k">Total kills for required loot</div><div class="v blue">${fmtNum(k.killsNeeded)}</div>
+          <div class="k">Total time</div><div class="v gold">${k.time}</div>
+        </div>
+      `;
+    }
+
+    outputLog.appendChild(kphWrap);
+  }
+
+  const breakdown = document.createElement("div");
+  breakdown.className = "sec";
+
+  let html = `<h3>More info — per upgrade</h3>`;
+  if (!partResults.length){
+    html += `<div class="warn">No parts selected. For multi-items, make sure at least one checkbox is enabled.</div>`;
+    breakdown.innerHTML = html;
+    outputLog.appendChild(breakdown);
+    return;
+  }
+
+  for (const pr of partResults){
+    const rows = pr.res.perLevel.map(L => {
+      const costTotal = L.levelCostTotal || 0;
+      return `
+        <tr>
+          <td>→ ${L.level}</td>
+          <td class="right">${fmtPct(L.chance)}</td>
+          <td class="right">${fmtNum(L.attempts)}</td>
+          <td class="right">${fmtNum(costTotal)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    html += `
+      <div class="mutedbox" style="margin-bottom:8px;">
+        <span class="pill"><b style="color:var(--gold)">${pr.part.label}</b></span>
+        <span class="pill">Levels ${pr.res.cur} → ${pr.res.tgt}</span>
+        <span class="pill">Avg attempts: <b style="color:var(--blue)">${fmtNum(pr.res.totalAttempts)}</b></span>
+      </div>
+      <table class="smalltable" style="margin-bottom:12px;">
+        <thead>
+          <tr>
+            <th>Upgrade</th>
+            <th class="right">Chance</th>
+            <th class="right">Avg attempts</th>
+            <th class="right">Expected total cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="4" style="color:var(--muted)">No levels to upgrade.</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  }
+
+  breakdown.innerHTML = html;
+  outputLog.appendChild(breakdown);
+}
+
+function renderStatsPage(boostMult, red){
+  statsSummary.innerHTML = `
+    <div class="kv" style="margin-bottom:10px;">
+      <div class="k">Item upgrade boost</div><div class="v gold">${boostMult.toFixed(4)}x</div>
+      <div class="k">Base camp resource efficiency level</div><div class="v">${red.campLvl}</div>
+      <div class="k">Base camp multiplier</div><div class="v">${red.campMult.toFixed(4)}x</div>
+      <div class="k">Charm of Efficiency</div><div class="v">${red.charm.toFixed(2)}x</div>
+      <div class="k">Medium Achievement Tier</div><div class="v">${red.medium.toFixed(2)}x</div>
+      <div class="k">Artisan Blessing</div><div class="v">${red.artisan.toFixed(2)}x</div>
+      <div class="k">Total resource reduction</div><div class="v blue">${red.total.toFixed(4)}x</div>
+    </div>
+  `;
+
+  chartTitle.textContent = `Item Upgrade Chance at ${boostMult.toFixed(4)}x`;
+  chanceTableBody.innerHTML = "";
+  for (let L=2; L<=20; L++){
+    const base = BASE_CHANCE[L] ?? 0;
+    const your = clamp(base * boostMult, 0, 1);
+    const att = your > 0 ? (1/your) : Infinity;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${L}</td>
+      <td class="right">${fmtPct(base)}</td>
+      <td class="right">${fmtPct(your)}</td>
+      <td class="right">${Number.isFinite(att) ? fmtNum(att) : "∞"}</td>
+    `;
+    chanceTableBody.appendChild(tr);
+  }
+}
+
+/* =========================
+   PAGE 3 — SUMMARY
+   ========================= */
+function makeSummaryCard(item){
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const isAether = item.key === "aether_blade";
+  const defMin = 1;
+  const defMax = isAether ? 40 : 20;
+
+  card.innerHTML = `
+    <div class="hd">
+      <div class="itemHead">
+        <div class="t">${item.name}</div>
+        <div class="hint">${item.kph ? "loot/time supported" : "loot/time not supported"}</div>
+      </div>
+    </div>
+    <div class="bd">
+      <div class="toggleline">
+        <label class="inline">
+          <input type="checkbox" class="sumEnable" data-item="${item.key}">
+          Enable level x–y
+        </label>
+
+        ${item.kph ? `
+          <div class="row" style="flex:1; min-width:260px;">
+            <div>
+              <label>KPH</label>
+              <input class="sumKPH" data-item="${item.key}" type="number" min="0" step="1" placeholder="e.g. 550">
+            </div>
+            <div>
+              <label>Loot mult</label>
+              <input class="sumLootMult" data-item="${item.key}" type="text" placeholder="e.g. 7.34x">
+            </div>
+          </div>
+        ` : `
+          <div class="thin">—</div>
+        `}
+      </div>
+
+      <div class="thin" style="margin-top:8px;">
+        Default range: ${defMin} → ${defMax}
+      </div>
+      <div class="thin" style="margin-top:8px;">
+
+      </div>
+      <div class="mutedbox" style="margin-top:10px; display:none;" id="sumRanges-${item.key}"></div>
+
+      <div class="mutedbox" style="margin-top:10px;">
+        <div class="kv" id="sumOut-${item.key}">
+          <div class="k">Total cost</div><div class="v">—</div>
+          <div class="k">Flat rate loot / kill</div><div class="v">—</div>
+          <div class="k">Boosted loot / kill</div><div class="v">—</div>
+          <div class="k">Loot / hour</div><div class="v">—</div>
+          <div class="k">Total kills for required loot</div><div class="v">—</div>
+          <div class="k">Total time</div><div class="v">—</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+function buildSummaryRangesUI(itemKey, containerEl){
+  // builds (hidden by default) per-item ranges inside sumRanges-*
+  const item = ITEMS.find(x=>x.key===itemKey);
+  const box = document.getElementById(`sumRanges-${itemKey}`);
+  box.innerHTML = "";
+  box.style.display = "none";
+
+  const makeBlock = (partKey, label, defaultChecked=true, min=1, max=20)=>{
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    wrap.innerHTML = `
+      <div class="chkrow" style="margin-top:0;">
+        <div>
+          <div style="font-weight:900; font-size:12px; color:var(--text)">${label}</div>
+          <div class="mini">Levels ${min}–${max}</div>
+        </div>
+        <input type="checkbox" data-part="${partKey}" ${defaultChecked ? "checked" : ""}>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <div>
+          <label>Current</label>
+          <input type="number" data-part="${partKey}" data-kind="cur" min="${min}" max="${max}" value="${min}">
+        </div>
+        <div>
+          <label>Target</label>
+          <input type="number" data-part="${partKey}" data-kind="tgt" min="${min}" max="${max}" value="${max}">
+        </div>
+      </div>
+    `;
+    return wrap;
+  };
+
+  if (item.special === "ratio3"){
+    box.appendChild(makeBlock("helmet","Abyssal Helmet", true, 1, 20));
+    box.appendChild(makeBlock("greaves","Abyssal Greaves", true, 1, 20));
+    box.appendChild(makeBlock("chestplate","Abyssal Chestplate", true, 1, 20));
+  } else if (item.special === "viridian3"){
+    box.appendChild(makeBlock("helmet","Viridian Helmet", true, 1, 20));
+    box.appendChild(makeBlock("greaves","Viridian Greaves", true, 1, 20));
+    box.appendChild(makeBlock("chestplate","Viridian Chestplate", true, 1, 20));
+  } else if (item.special === "primordial5"){
+    box.appendChild(makeBlock("power","Power Amulet", false, 1, 20));
+    box.appendChild(makeBlock("speed","Speed Amulet", false, 1, 20));
+    box.appendChild(makeBlock("weaponry","Weaponry Amulet", false, 1, 20));
+    box.appendChild(makeBlock("defence","Defence Amulet", false, 1, 20));
+    box.appendChild(makeBlock("primordial","Primordial Amulet", true, 1, 20));
+  } else if (item.special === "aether"){
+    box.appendChild(makeBlock("main","Aether Blade", true, 1, 40));
+  } else {
+    box.appendChild(makeBlock("main", item.name, true, 1, 20));
+  }
+
+  // hook events
+  box.querySelectorAll("input").forEach(inp=>{
+    inp.addEventListener("input", ()=>renderSummaryPage(true));
+    inp.addEventListener("change", ()=>renderSummaryPage(true));
+  });
+}
+
+function getDefaultPartsForItem(itemKey){
+  const item = ITEMS.find(x=>x.key===itemKey);
+  const max = (itemKey==="aether_blade") ? 40 : 20;
+
+  if (item.special === "ratio3"){
+    return [
+      {partKey:"helmet", label:"Abyssal Helmet", enabled:true, cur:1, tgt:max},
+      {partKey:"greaves", label:"Abyssal Greaves", enabled:true, cur:1, tgt:max},
+      {partKey:"chestplate", label:"Abyssal Chestplate", enabled:true, cur:1, tgt:max},
+    ];
+  }
+  if (item.special === "viridian3"){
+    return [
+      {partKey:"helmet", label:"Viridian Helmet", enabled:true, cur:1, tgt:max},
+      {partKey:"greaves", label:"Viridian Greaves", enabled:true, cur:1, tgt:max},
+      {partKey:"chestplate", label:"Viridian Chestplate", enabled:true, cur:1, tgt:max},
+    ];
+  }
+  if (item.special === "primordial5"){
+    return [
+      {partKey:"power", label:"Power Amulet", enabled:false, cur:1, tgt:max},
+      {partKey:"speed", label:"Speed Amulet", enabled:false, cur:1, tgt:max},
+      {partKey:"weaponry", label:"Weaponry Amulet", enabled:false, cur:1, tgt:max},
+      {partKey:"defence", label:"Defence Amulet", enabled:false, cur:1, tgt:max},
+      {partKey:"primordial", label:"Primordial Amulet", enabled:true, cur:1, tgt:max},
+    ];
+  }
+  return [{partKey:"main", label:item.name, enabled:true, cur:1, tgt:max}];
+}
+
+function readSummaryParts(itemKey){
+  const enable = document.querySelector(`.sumEnable[data-item="${itemKey}"]`)?.checked;
+  const rangeBox = document.getElementById(`sumRanges-${itemKey}`);
+
+  if (!enable) return getDefaultPartsForItem(itemKey);
+
+  const parts = getSelectedPartsFromContainer(rangeBox, itemKey);
+  // clamp current/target to sane bounds (already set in inputs, but still)
+  const item = ITEMS.find(x=>x.key===itemKey);
+  const max = (itemKey==="aether_blade") ? 40 : 20;
+  for (const p of parts){
+    p.cur = clamp(Math.floor(p.cur||1), 1, max);
+    p.tgt = clamp(Math.floor(p.tgt||max), 1, max);
+  }
+  return parts;
+}
+
+function renderSummaryPage(soft=false){
+  // if they’re not on the summary page and this is a “soft” update, chill a bit
+  const isOnSummary = document.getElementById("page-summary").classList.contains("active");
+  if (soft && !isOnSummary && summaryGrid.children.length) return;
+
+  // rebuild cards if first time (or if missing)
+  if (!summaryGrid.children.length){
+    summaryGrid.innerHTML = "";
+    for (const item of ITEMS){
+      const card = makeSummaryCard(item);
+      summaryGrid.appendChild(card);
+      buildSummaryRangesUI(item.key, card);
+
+      // toggle show/hide ranges
+      const en = card.querySelector(`.sumEnable[data-item="${item.key}"]`);
+      const box = document.getElementById(`sumRanges-${item.key}`);
+      en.addEventListener("change", ()=>{
+        box.style.display = en.checked ? "block" : "none";
+        renderSummaryPage(true);
+      });
+
+      // kph inputs
+      card.querySelectorAll(".sumKPH,.sumLootMult").forEach(inp=>{
+        inp.addEventListener("input", ()=>renderSummaryPage(true));
+        inp.addEventListener("change", ()=>renderSummaryPage(true));
+      });
+    }
+  }
+
+  const boostMult = parseMult(inpBoost.value, 1);
+  const red = getReductionMultiplier();
+  const reductionMult = red.total;
+
+  for (const item of ITEMS){
+    const parts = readSummaryParts(item.key);
+
+    // run calc
+    const totalsByRes = {};
+    let totalAttemptsAll = 0;
+
+    for (const p of parts){
+      if (!p.enabled) continue;
+      const res = calcForPart(item.key, p.partKey, p.cur, p.tgt, boostMult, reductionMult);
+      totalAttemptsAll += res.totalAttempts;
+      for (const [r,amt] of Object.entries(res.resources)){
+        deepAddResource(totalsByRes, r, amt);
+      }
+    }
+
+    // primordial merge: flat, not reduced
+    if (item.key === "primordial_amulet"){
+      const extra = getPrimordialMergeExtraFlat(parts);
+      if (extra > 0) deepAddResource(totalsByRes, "Amulet Fragments", extra);
+    }
+
+    // KPH calc (one resource)
+    let kphLine = "—", killsLine="—", timeLine="—", flatLPK="—", boostedLPK="—";
+    if (item.kph){
+      const kphInp = document.querySelector(`.sumKPH[data-item="${item.key}"]`);
+      const multInp = document.querySelector(`.sumLootMult[data-item="${item.key}"]`);
+      const kph = Number(kphInp?.value || 0);
+      const lootMult = parseMult(multInp?.value || "1x", 1);
+
+      const k = calcKPHSectionForItem(item.key, totalsByRes, kph, lootMult);
+      if (k){
+        flatLPK = `${fmtNum(k.basePerKill)} ${k.lootRes}`;
+        boostedLPK = `${fmtNum(k.boostedPerKill)} ${k.lootRes}`;
+        kphLine = `${fmtNum(k.lootPerHour)} ${k.lootRes}/hr`;
+        killsLine = fmtNum(k.killsNeeded);
+        timeLine = k.time;
+      }
+    }
+
+    // ---- SUMMARY OUTPUT (no "Total cost") ----
+    const out = document.getElementById(`sumOut-${item.key}`);
+
+    // write the inner stats box
+    out.innerHTML = `
+      <div class="k">Flat rate loot / kill</div><div class="v">${flatLPK}</div>
+      <div class="k">Boosted loot / kill</div><div class="v">${boostedLPK}</div>
+      <div class="k">Loot/Hour</div><div class="v blue">${kphLine}</div>
+      <div class="k">Total Kills for required loot</div><div class="v blue">${killsLine}</div>
+      <div class="k">Total time (d:h:m)</div><div class="v gold">${timeLine}</div>
+    `;
+
+    // build "Total resources" line
+    const parentMuted = out.closest(".mutedbox");
+
+    // remove the previous resources line if it exists (prevents duplicates)
+    const maybeOld = parentMuted.previousElementSibling;
+    if (maybeOld && maybeOld.classList && maybeOld.classList.contains("hintline")) {
+      maybeOld.remove();
+    }
+
+    const allResources = Object.entries(totalsByRes)
+      .sort((a,b) => b[1] - a[1])
+      .map(([r,a]) => `${r}: ${fmtNum(a)}`);
+
+    const resourcesLine = document.createElement("div");
+    resourcesLine.className = "thin hintline";
+    resourcesLine.style.display = "flex";
+    resourcesLine.style.flexWrap = "wrap";
+    resourcesLine.style.gap = "6px 14px";
+    resourcesLine.style.marginBottom = "10px";
+
+    if (allResources.length){
+      resourcesLine.innerHTML = `
+        <span style="font-weight:700; color:var(--text);">Total resources:</span>
+        ${allResources.map(r => `<span>${r}</span>`).join("")}
+      `;
+    } else {
+      resourcesLine.innerHTML = `<span style="color:var(--muted)">Total resources: —</span>`;
+    }
+
+    // insert ABOVE the muted stats box
+    parentMuted.parentElement.insertBefore(resourcesLine, parentMuted);
+
+
+  }
+}
+
+/* =========================
+   NAV
+   ========================= */
+document.querySelectorAll(".tabbtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const tab = btn.dataset.tab;
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+
+    const id = tab==="calc" ? "page-calc" : (tab==="stats" ? "page-stats" : "page-summary");
+    document.getElementById(id).classList.add("active");
+
+    if (id === "page-summary") renderSummaryPage();
+  });
+});
+
+/* =========================
+   RESET
+   ========================= */
+function resetAll(){
+  inpBoost.value = "";
+  inpCampLvl.value = 0;
+  chkCharm.checked = false;
+  chkMedium.checked = false;
+  chkArtisan.checked = false;
+
+  selItem.value = "abyssal_gear";
+  rebuildLevelInputs();
+
+  inpKPH.value = "";
+  inpLootMult.value = "";
+
+  // clear summary grid so it rebuilds clean
+  summaryGrid.innerHTML = "";
+
+  recalcAll();
+}
+</script>
+</body>
+</html>
