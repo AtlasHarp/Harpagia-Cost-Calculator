@@ -74,6 +74,16 @@
       align-items:start;
     }
     @media (max-width: 1100px){ .grid{grid-template-columns:1fr;} }
+    /* Page 2: stats grid */
+    .statsGrid{
+      grid-template-columns: 420px 1fr 420px;
+    }
+
+    @media (max-width: 1100px){
+      .statsGrid{
+        grid-template-columns: 1fr;
+      }
+    }
 
     .card{
       border:1px solid var(--line);
@@ -411,7 +421,7 @@
 
     <!-- PAGE 2 -->
     <div class="page" id="page-stats">
-      <div class="grid" style="grid-template-columns: 380px 1fr 380px;">
+      <div class="grid statsGrid">
         <div class="card">
           <div class="hd">
             <div class="t">Inputs Summary</div>
