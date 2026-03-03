@@ -85,6 +85,60 @@
       }
     }
 
+    .boost-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .boost-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .boost-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .boost-sub {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .boost-final {
+      font-weight: 600;
+      font-size: 16px;
+      color: #ffd76a; /* your gold accent */
+    }
+
+    .boost-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .boost-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .chk-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .card{
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
@@ -298,15 +352,40 @@
             <div class="hint">global inputs</div>
           </div>
           <div class="bd">
-            <label>Item upgrade boost - Found near bottom of Home tab.</label>
-            <input id="inpBoost" type="text" placeholder="e.g. 3.77x" />
-            <div class="mini">Multiplies base upgrade chance table (capped at 100%).</div>
+            <div class="boost-card">
+
+              <div class="boost-header">
+                <div>
+                  <div class="boost-title">Item Upgrade Boost</div>
+                  <div class="boost-sub">
+                    Enter value from Home tab (Use the checkbox below if you don't have item upgrade aura active, but will be using it.)
+                  </div>
+                </div>
+                <div class="boost-final">
+                  <span id="outBoost">1.00x</span>
+                </div>
+              </div>
+
+              <input id="inpBaseBoost" type="text" placeholder="e.g. 3.77x" />
+
+              <div class="boost-row">
+                <span>Item Upgrade Aura (1.5x)</span>
+                <label class="chk-wrap">
+                  <input id="chkAura" type="checkbox" />
+                </label>
+              </div>
+               <div></div>
+              <div class="mini">
+                Final boost is calculated automatically and capped at 6.00x.
+              </div>
+
+            </div>
 
             <div style="height:12px"></div>
 
             <label>Base camp resource efficiency level (0–20)</label>
             <input id="inpCampLvl" type="number" min="0" max="20" value="0" />
-            <div class="mini">0 = 1.00x, 20 = 0.80x (linear).</div>
+            <div></div>
 
             <div class="chkrow">
               <div>
@@ -464,7 +543,7 @@
               <p><strong>Calculator by:</strong> BienChien</p>
               <p>
                 Built as an average-cost calculator (no RNG simulation).
-                All values based on in-game data and expected attempts.
+                All values based on in-game data and expected attempts. Since Attunement is a low-RNG pity system, it can be ignored for the purposes of this calculator.
               </p>
               <p>
                 Major credits to @poppabear, @gl_crowd, @albino for helping to provide data collection. @SacD12eDz, @AeschyA for supporting the project, and of course @Atlas, @YoMikey for checking for bugs, testing data and all around being present while I attempted to make this.
@@ -874,8 +953,21 @@ const outputLog = document.getElementById("outputLog");
 const aetherNote = document.getElementById("aetherNote");
 const primordialNote = document.getElementById("primordialNote");
 
+const outBoost = document.getElementById("outBoost");
+const inpBaseBoost = document.getElementById("inpBaseBoost");
+const chkAura = document.getElementById("chkAura");
 
-const inpBoost = document.getElementById("inpBoost");
+function getBoostMult(){
+  // parseMult expects string like "3.77x", so we can feed it the base input directly
+  let base = parseMult(inpBaseBoost.value, 1);
+
+  if (chkAura.checked) base *= 1.5;
+
+  // cap at 6.00x
+  base = Math.min(base, 6.0);
+
+  return base;
+}
 const inpCampLvl = document.getElementById("inpCampLvl");
 const chkCharm = document.getElementById("chkCharm");
 const chkMedium = document.getElementById("chkMedium");
@@ -898,7 +990,7 @@ document.getElementById("btnRecalc").addEventListener("click", () => recalcAll()
 document.getElementById("btnReset").addEventListener("click", () => resetAll());
 
 // NOTE: selItem change is handled specially to avoid the old “multi→single” stale UI calc bug.
-[inpBoost, inpCampLvl, chkCharm, chkMedium, chkArtisan, inpKPH, inpLootMult].forEach(el=>{
+[inpBaseBoost, chkAura, inpCampLvl, chkCharm, chkMedium, chkArtisan, inpKPH, inpLootMult].forEach(el=>{
   el.addEventListener("input", () => recalcAll());
   el.addEventListener("change", () => recalcAll());
 });
@@ -1224,17 +1316,18 @@ function calcKPHSectionForItem(itemKey, totalResourcesNeeded, kph, lootMult){
 /* =========================
    RENDER
    ========================= */
-function recalcAll(){
-  const boostMult = parseMult(inpBoost.value, 1);
-  const red = getReductionMultiplier();
-  outReduction.textContent = red.total.toFixed(4) + "x";
+   function recalcAll(){
+     const boostMult = getBoostMult();
+     const red = getReductionMultiplier();
 
-  renderStatsPage(boostMult, red);
-  renderCalculatorOutput(boostMult, red.total);
+     outBoost.textContent = boostMult.toFixed(2) + "x";
 
-  // keep page 3 feeling live-ish even if they don’t click refresh
-  renderSummaryPage(true);
-}
+     outReduction.textContent = red.total.toFixed(4) + "x";
+
+     renderStatsPage(boostMult, red);
+     renderCalculatorOutput(boostMult, red.total);
+     renderSummaryPage(true);
+   }
 
 function renderCalculatorOutput(boostMult, reductionMult){
   const itemKey = selItem.value;
@@ -1608,7 +1701,7 @@ function renderSummaryPage(soft=false){
     }
   }
 
-  const boostMult = parseMult(inpBoost.value, 1);
+  const boostMult = getBoostMult();
   const red = getReductionMultiplier();
   const reductionMult = red.total;
 
@@ -1722,8 +1815,8 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
    RESET
    ========================= */
 function resetAll(){
-  inpBoost.value = "";
-  inpCampLvl.value = 0;
+  inpBaseBoost.value = "";
+  chkAura.checked = false;
   chkCharm.checked = false;
   chkMedium.checked = false;
   chkArtisan.checked = false;
