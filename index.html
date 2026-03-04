@@ -1205,8 +1205,8 @@ function applyAbyssalRatios(baseCostMap, partKey){
   const isChest = partKey === "chestplate";
   const multFor = (res)=>{
     const r = res.toLowerCase();
-    if (r.includes("gold")) return isHelm ? 1 : (isGreaves ? 5/4 : 6/4);
-    if (r.includes("abyssal components")) return isHelm ? 1 : (isGreaves ? 3/1 : 5/1);
+    if (r.includes("gold")) return isHelm ? 1 : (isGreaves ? 3/1 : 5/1);
+    if (r.includes("abyssal components")) return isHelm ? 1 : (isGreaves ? 5/4 : 6/4);
     if (r.includes("eldritch") || r.includes("voidstone") || r.includes("orichalcum")){
       return isHelm ? 1 : (isGreaves ? 9/8 : 10/8);
     }
