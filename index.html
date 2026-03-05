@@ -444,6 +444,11 @@
               is included <strong>only</strong> if one or more base amulets
               (Power, Speed, Weaponry, Defence) are selected.
             </div>
+            <div id="abyssalNote" class="ok" style="display:none;">
+              For abyssal axe, Use abyssal chestplate for calculation.
+              Gold will be exactly the same but the other materials will vary,
+              though only slightly.
+            </div>
 
 
             <div style="height:10px"></div>
@@ -693,10 +698,10 @@ const costData = {
 // Abyssal Greataxe — costs for levels 2..20 (target level)
 (() => {
   const shards = [
-    5, 8, 11, 13, 16,
-    19, 21, 24, 30, 32,
-    35, 38, 40, 43, 46,
-    48, 51, 56, 59
+    3, 6, 9, 12, 15,
+    18, 21, 24, 27, 30,
+    33, 36, 39, 42, 45,
+    48, 51, 54, 57
   ];
 
   const components = [
@@ -768,24 +773,24 @@ const costData = {
 // Viridian Gear — Helmet / Greaves / Chestplate costs (levels 2..20)
 (() => {
   const helmet = [
-    3, 3, 5, 5, 5,
-    8, 8, 8, 11, 11,
-    13, 13, 13, 16, 16,
-    16, 19, 19, 21
+    1, 2, 3, 4, 5,
+    6, 7, 8, 9, 10,
+    11, 12, 13, 14, 15,
+    16, 17, 18, 19
   ];
 
   const greaves = [
-    3, 5, 8, 8, 11,
-    13, 16, 16, 19, 21,
-    24, 24, 27, 30, 32,
-    32, 35, 38, 40
+    2, 4, 6, 8, 10,
+    12, 14, 16, 18, 20,
+    22, 24, 26, 28, 30,
+    32, 34, 36, 38
   ];
 
   const chestplate = [
-    5, 8, 11, 13, 16,
-    19, 21, 24, 30, 32,
-    35, 38, 40, 43, 46,
-    48, 51, 56, 59
+    3, 6, 9, 12, 15,
+    18, 21, 24, 27, 30,
+    33, 36, 39, 42, 45,
+    48, 51, 54, 57
   ];
 
   for (let i = 0; i < 19; i++){
@@ -943,6 +948,17 @@ function deepAddResource(map, res, amt){
 function sumResources(map){
   return Object.values(map).reduce((a,b)=>a + (Number.isFinite(b)?b:0), 0);
 }
+function getDisplayResourceForBreakdown(itemKey){
+  // what resource should the "Expected total cost" column show as the primary?
+  if (itemKey === "abyssal_greataxe") return "Abyssal Shards";
+  if (itemKey === "swift_blade") return "Anubian Shards";
+  if (itemKey === "viridian_gear") return "Viridian Shards";
+  if (itemKey === "dreadfang_shiv") return "Dreadfang Fragments";
+  if (itemKey === "aether_blade") return "Aether Shards";
+  if (itemKey === "primordial_amulet") return "Amulet Fragments";
+  // default: show Gold if it exists, else sum
+  return null;
+}
 
 /* =========================
    DOM
@@ -952,6 +968,7 @@ const levelsArea = document.getElementById("levelsArea");
 const outputLog = document.getElementById("outputLog");
 const aetherNote = document.getElementById("aetherNote");
 const primordialNote = document.getElementById("primordialNote");
+const abyssalNote = document.getElementById("abyssalNote");
 
 const outBoost = document.getElementById("outBoost");
 const inpBaseBoost = document.getElementById("inpBaseBoost");
@@ -1101,6 +1118,7 @@ function rebuildLevelInputs(){
 
   aetherNote.style.display = (item?.special === "aether") ? "block" : "none";
   primordialNote.style.display = (item?.key === "primordial_amulet") ? "block" : "none";
+  abyssalNote.style.display = (item?.key === "abyssal_gear") ? "block" : "none";
 
   const kphSupported = !!item?.kph;
   kphUnsupported.style.display = kphSupported ? "none" : "block";
@@ -1432,14 +1450,27 @@ function renderCalculatorOutput(boostMult, reductionMult){
   }
 
   for (const pr of partResults){
+    const dispRes = getDisplayResourceForBreakdown(itemKey);
+
     const rows = pr.res.perLevel.map(L => {
-      const costTotal = L.levelCostTotal || 0;
+      let shownVal = 0;
+
+      if (dispRes){
+        shownVal = (L.expectedCostMap && Number.isFinite(L.expectedCostMap[dispRes]))
+          ? L.expectedCostMap[dispRes]
+          : 0;
+      } else if (L.expectedCostMap && Number.isFinite(L.expectedCostMap["Gold"])) {
+        shownVal = L.expectedCostMap["Gold"];
+      } else {
+        shownVal = L.levelCostTotal || 0;
+      }
+
       return `
         <tr>
           <td>→ ${L.level}</td>
           <td class="right">${fmtPct(L.chance)}</td>
           <td class="right">${fmtNum(L.attempts)}</td>
-          <td class="right">${fmtNum(costTotal)}</td>
+          <td class="right">${fmtNum(shownVal)}</td>
         </tr>
       `;
     }).join("");
@@ -1456,7 +1487,7 @@ function renderCalculatorOutput(boostMult, reductionMult){
             <th>Upgrade</th>
             <th class="right">Chance</th>
             <th class="right">Avg attempts</th>
-            <th class="right">Expected total cost</th>
+            <th class="right">Expected primary cost</th>
           </tr>
         </thead>
         <tbody>
