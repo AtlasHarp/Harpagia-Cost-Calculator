@@ -286,6 +286,36 @@
     .page{display:none;}
     .page.active{display:block;}
 
+    .grid-market{
+      grid-template-columns: 320px 1fr;
+      align-items:start;
+    }
+    .grid-farm-cards{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+
+    @media (max-width:640px){
+      .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+        padding:12px 14px;
+      }
+      .tabs{ gap:6px; }
+      .tabbtn{ font-size:12px; padding:7px 10px; }
+      .wrap{ padding:12px 10px; }
+      .grid{ grid-template-columns:1fr !important; }
+      .grid-market{ grid-template-columns:1fr; }
+      .grid-farm-cards{ grid-template-columns:1fr; }
+      .statsGrid{ grid-template-columns:1fr; }
+      .log{ height:auto; max-height:400px; }
+      .row{ flex-direction:column; }
+      .chartwrap{ max-height:300px; }
+    }
+
     .chartwrap{
       overflow:auto;
       max-height: 420px;
@@ -620,7 +650,7 @@
         Different people will naturally sell at different prices, and anyone is, of course, free to charge whatever they feel is fair —
         this is a general reference guide, simply to be used for estimates.
       </div>
-      <div class="grid" style="grid-template-columns: 320px 1fr; align-items:start;">
+      <div class="grid grid-market">
         <div class="card">
           <div class="hd">
             <div class="t">Item + Level</div>
@@ -675,7 +705,7 @@
           </div>
         </div>
         <!-- Output cards -->
-        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px;">
+        <div class="grid-farm-cards">
           <div class="card">
             <div class="hd"><div class="t">RSS Sales</div><div class="hint">sell raw resource</div></div>
             <div class="bd"><div id="farmOutRSS"></div></div>
