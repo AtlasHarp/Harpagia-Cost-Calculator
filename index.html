@@ -170,6 +170,20 @@
       color:var(--text);
       outline:none;
     }
+    select{
+      appearance:none;
+      -webkit-appearance:none;
+      background-color:#0b1520;
+      padding-right:32px;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,.45)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 12px center;
+      cursor:pointer;
+    }
+    option{
+      background:#0b1520;
+      color:var(--text);
+    }
     input:focus, select:focus, textarea:focus{
       border-color: rgba(42,163,255,.55);
       box-shadow: 0 0 0 3px rgba(42,163,255,.15);
@@ -338,6 +352,7 @@
       <div class="tabbtn active" data-tab="calc">Cost Calculator</div>
       <div class="tabbtn" data-tab="stats">View Stats</div>
       <div class="tabbtn" data-tab="summary">Full Summary</div>
+      <div class="tabbtn" data-tab="market">Market Value</div>
     </div>
   </div>
 
@@ -415,11 +430,11 @@
             <div class="kv">
               <div class="k">Total resource cost reduction multiplier</div>
               <div class="v gold" id="outReduction">1.0000x</div>
+              <div class="k">Minimum possible (all reductions active)</div>
               <div class="v" style="color:var(--muted)">0.3724x</div>
             </div>
 
             <div class="btnrow">
-              <button class="btn" id="btnRecalc">Recalculate</button>
               <button class="btn secondary" id="btnReset">Reset</button>
             </div>
           </div>
@@ -595,6 +610,91 @@
 
       <div class="summarygrid" id="summaryGrid"></div>
     </div>
+
+    <!-- PAGE 4 -->
+    <div class="page" id="page-market">
+      <div class="mutedbox" style="margin-bottom:16px; line-height:1.6;">
+        <strong style="color:var(--text);">Prices shown here are based on recorded market sales</strong> —
+        real transactions that have taken place between players. Per-level values between lvl 1 and max
+        are estimates derived from cumulative resource investment and upgrade chance, not direct sales data.
+        Different people will naturally sell at different prices, and anyone is, of course, free to charge whatever they feel is fair —
+        this is a general reference guide, simply to be used for estimates.
+      </div>
+      <div class="grid" style="grid-template-columns: 320px 1fr; align-items:start;">
+        <div class="card">
+          <div class="hd">
+            <div class="t">Item + Level</div>
+            <div class="hint">select to price</div>
+          </div>
+          <div class="bd">
+            <label>Select item</label>
+            <select id="mktSelItem"></select>
+            <div style="height:12px"></div>
+            <label>Current level</label>
+            <input id="mktLevel" type="number" min="1" max="20" value="20" />
+            <div id="mktAmuletNote" class="mutedbox" style="margin-top:10px;display:none;">
+              <strong style="color:var(--text);">Base Amulet</strong> applies to all four base amulet types — Power, Speed, Weaponry, and Defence — as they share identical upgrade costs and market prices.
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hd">
+            <div class="t">Market Value Output</div>
+            <div class="hint">gem estimate</div>
+          </div>
+          <div class="bd">
+            <div id="mktOutput"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FARMING CALCULATOR — hidden until secret unlock -->
+      <div id="farmCalc" style="display:none; margin-top:16px;">
+        <!-- Inputs -->
+        <div class="card">
+          <div class="hd">
+            <div class="t">Farming Calculator</div>
+            <div class="hint">RSS → gem/hr</div>
+          </div>
+          <div class="bd">
+            <div id="farmUnsupported" class="mutedbox" style="display:none;">
+              KPH/Loot data is not available for this item. Farming stats cannot be calculated.
+            </div>
+            <div id="farmInputs">
+              <div class="row">
+                <div>
+                  <label>Kills per hour</label>
+                  <input id="farmKPH" type="number" min="0" step="1" placeholder="e.g. 550" />
+                </div>
+                <div>
+                  <label>Loot multiplier</label>
+                  <input id="farmLootMult" type="text" placeholder="e.g. 7.34x" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Output cards -->
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px;">
+          <div class="card">
+            <div class="hd"><div class="t">RSS Sales</div><div class="hint">sell raw resource</div></div>
+            <div class="bd"><div id="farmOutRSS"></div></div>
+          </div>
+          <div class="card">
+            <div class="hd"><div class="t">Max Level Item</div><div class="hint">craft &amp; sell at max</div></div>
+            <div class="bd"><div id="farmOutMax"></div></div>
+          </div>
+          <div class="card">
+            <div class="hd"><div class="t">Item at Level</div><div class="hint">craft &amp; sell at level</div></div>
+            <div class="bd">
+              <label>Target level</label>
+              <input id="farmLevel" type="number" min="1" max="20" value="10" style="margin-bottom:12px;" />
+              <div id="farmOutLevel"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -624,7 +724,8 @@ const ITEMS = [
   { key:"viridian_gear", name:"Viridian Gear", multi:true, kph:true, special:"viridian3",
     lootResource:"Viridian Shards", lootPerKill:{ "Viridian Shards":0.0396 } },
   { key:"dreadfang_shiv", name:"Dreadfang Shiv", multi:false, kph:true,
-    lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 } }
+    lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 } },
+  { key:"elemental_blade", name:"Elemental Blade", multi:false, kph:false, hidden:true }
 ];
 
 /* =========================
@@ -639,7 +740,8 @@ const costData = {
   aether_blade: { main: {} },
   viridian_gear: { helmet: {}, greaves: {}, chestplate: {} },
   abyssal_gear: { helmet: {} },
-  primordial_amulet: { base_amulet: {}, primordial: {} }
+  primordial_amulet: { base_amulet: {}, primordial: {} },
+  elemental_blade: { main: {} }
 };
 
 // ====== PASTE DATA HERE ZONES (search this comment later) ======
@@ -906,6 +1008,20 @@ const costData = {
   }
 })();
 
+// 9) Elemental Blade: costData.elemental_blade.main[level] = { ... }
+// Elemental Blade — costs for levels 2..20 (target level)
+// Each resource costs level_index * 100,000 (level 2 = 100k, level 20 = 1,900k)
+(() => {
+  const resources = ["Ruby", "Topaz", "Amethyst", "Crystal Component", "Abyssal Component"];
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+    const amt = (i + 1) * 100000;
+    const entry = {};
+    for (const res of resources) entry[res] = amt;
+    costData.elemental_blade.main[level] = entry;
+  }
+})();
+
 // =============================================================
 
 /* =========================
@@ -945,9 +1061,6 @@ function deepAddResource(map, res, amt){
   if (!Number.isFinite(amt)) return;
   map[res] = (map[res] || 0) + amt;
 }
-function sumResources(map){
-  return Object.values(map).reduce((a,b)=>a + (Number.isFinite(b)?b:0), 0);
-}
 function getDisplayResourceForBreakdown(itemKey){
   // what resource should the "Expected total cost" column show as the primary?
   if (itemKey === "abyssal_greataxe") return "Abyssal Shards";
@@ -956,6 +1069,7 @@ function getDisplayResourceForBreakdown(itemKey){
   if (itemKey === "dreadfang_shiv") return "Dreadfang Fragments";
   if (itemKey === "aether_blade") return "Aether Shards";
   if (itemKey === "primordial_amulet") return "Amulet Fragments";
+  if (itemKey === "elemental_blade") return "Ruby";
   // default: show Gold if it exists, else sum
   return null;
 }
@@ -1003,7 +1117,6 @@ const chanceTableBody = document.querySelector("#chanceTable tbody");
 const summaryGrid = document.getElementById("summaryGrid");
 document.getElementById("btnSummaryRefresh").addEventListener("click", ()=>renderSummaryPage());
 
-document.getElementById("btnRecalc").addEventListener("click", () => recalcAll());
 document.getElementById("btnReset").addEventListener("click", () => resetAll());
 
 // NOTE: selItem change is handled specially to avoid the old “multi→single” stale UI calc bug.
@@ -1018,6 +1131,7 @@ document.getElementById("btnReset").addEventListener("click", () => resetAll());
 function init(){
   selItem.innerHTML = "";
   for (const it of ITEMS){
+    if (it.hidden) continue;
     const opt = document.createElement("option");
     opt.value = it.key;
     opt.textContent = it.name;
@@ -1160,11 +1274,6 @@ function getUpgradeChanceForLevel(level, boostMult, itemKey){
   if (itemKey === "aether_blade") return 1.0;
   const base = BASE_CHANCE[level] ?? 0;
   return clamp(base * boostMult, 0, 1);
-}
-function getExpectedAttempts(level, boostMult, itemKey){
-  const p = getUpgradeChanceForLevel(level, boostMult, itemKey);
-  if (p <= 0) return Infinity;
-  return 1 / p;
 }
 function prettyPartLabel(item, partKey){
   if (!item) return partKey;
@@ -1383,6 +1492,15 @@ function renderCalculatorOutput(boostMult, reductionMult){
   }
 
   outputLog.innerHTML = "";
+
+  const swapped = parts.filter(p => p.enabled && p.cur > p.tgt);
+  if (swapped.length){
+    const swapWarn = document.createElement("div");
+    swapWarn.className = "warn";
+    swapWarn.style.marginBottom = "10px";
+    swapWarn.textContent = `Warning: current level is higher than target for ${swapped.map(p=>p.label).join(", ")}. Values have been swapped to calculate.`;
+    outputLog.appendChild(swapWarn);
+  }
 
   const top = document.createElement("div");
   top.className = "sec";
@@ -1712,6 +1830,7 @@ function renderSummaryPage(soft=false){
   if (!summaryGrid.children.length){
     summaryGrid.innerHTML = "";
     for (const item of ITEMS){
+      if (item.hidden) continue;
       const card = makeSummaryCard(item);
       summaryGrid.appendChild(card);
       buildSummaryRangesUI(item.key, card);
@@ -1737,6 +1856,7 @@ function renderSummaryPage(soft=false){
   const reductionMult = red.total;
 
   for (const item of ITEMS){
+    if (item.hidden) continue;
     const parts = readSummaryParts(item.key);
 
     // run calc
@@ -1835,12 +1955,373 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     const tab = btn.dataset.tab;
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
 
-    const id = tab==="calc" ? "page-calc" : (tab==="stats" ? "page-stats" : "page-summary");
+    const id = tab==="calc" ? "page-calc" : tab==="stats" ? "page-stats" : tab==="summary" ? "page-summary" : "page-market";
     document.getElementById(id).classList.add("active");
 
     if (id === "page-summary") renderSummaryPage();
+    if (id === "page-market") initMarketPage();
   });
 });
+
+/* =========================
+   MARKET VALUE PAGE
+   ========================= */
+const MARKET_BOOST = 6.0;
+const MARKET_REDUCTION = 0.8 * 0.5 * 0.98 * 0.95; // camp 20 + charm + medium + artisan = 0.3724
+
+const PRICE_CATALOG = [
+  { key:"abyssal_gear__helmet",          label:"Abyssal Helmet",      itemKey:"abyssal_gear",       partKey:"helmet",      lvl1:10,   lvlMax:60,    maxLevel:20 },
+  { key:"abyssal_gear__greaves",         label:"Abyssal Greaves",     itemKey:"abyssal_gear",       partKey:"greaves",     lvl1:15,   lvlMax:100,   maxLevel:20 },
+  { key:"abyssal_gear__chestplate",      label:"Abyssal Chestplate",  itemKey:"abyssal_gear",       partKey:"chestplate",  lvl1:20,   lvlMax:140,   maxLevel:20 },
+  { key:"aether_blade__main",            label:"Aether Blade",        itemKey:"aether_blade",       partKey:"main",        lvl1:200,  lvlMax:900,   maxLevel:40 },
+  { key:"primordial_amulet__base",        label:"Base Amulet",         itemKey:"primordial_amulet",  partKey:"base_amulet", lvl1:20,   lvlMax:120,   maxLevel:20 },
+  { key:"primordial_amulet__primordial", label:"Primordial Amulet",   itemKey:"primordial_amulet",  partKey:"primordial",  lvl1:600,  lvlMax:1200,  maxLevel:20 },
+  { key:"keris_dagger__main",            label:"Keris Dagger",        itemKey:"keris_dagger",       partKey:"main",        lvl1:80,   lvlMax:250,   maxLevel:20 },
+  { key:"abyssal_greataxe__main",        label:"Abyssal Greataxe",    itemKey:"abyssal_greataxe",   partKey:"main",        lvl1:150,  lvlMax:1400,  maxLevel:20 },
+  { key:"swift_blade__main",             label:"Swift Blade",         itemKey:"swift_blade",        partKey:"main",        lvl1:100,  lvlMax:500,   maxLevel:20 },
+  { key:"viridian_gear__helmet",         label:"Viridian Helmet",     itemKey:"viridian_gear",      partKey:"helmet",      lvl1:50,   lvlMax:1000,  maxLevel:20 },
+  { key:"viridian_gear__greaves",        label:"Viridian Greaves",    itemKey:"viridian_gear",      partKey:"greaves",     lvl1:100,  lvlMax:2000,  maxLevel:20 },
+  { key:"viridian_gear__chestplate",     label:"Viridian Chestplate", itemKey:"viridian_gear",      partKey:"chestplate",  lvl1:150,  lvlMax:3000,  maxLevel:20 },
+  { key:"dreadfang_shiv__main",          label:"Dreadfang Shiv",      itemKey:"dreadfang_shiv",     partKey:"main",        lvl1:400,  lvlMax:4000,  maxLevel:20 },
+  { key:"elemental_blade__main",         label:"Elemental Blade",     itemKey:"elemental_blade",    partKey:"main",        lvl1:7000, lvlMax:10000, maxLevel:20, hidden:true },
+];
+
+function getMarketPrimaryResource(entry){
+  const map = {
+    "abyssal_gear":      "Gold",
+    "aether_blade":      "Aether Shards",
+    "primordial_amulet": "Amulet Fragments",
+    "keris_dagger":      "Gold",
+    "abyssal_greataxe":  "Abyssal Shards",
+    "swift_blade":       "Anubian Shards",
+    "viridian_gear":     "Viridian Shards",
+    "dreadfang_shiv":    "Dreadfang Fragments",
+    "elemental_blade":   "Ruby",
+  };
+  return map[entry.itemKey] || null;
+}
+
+function calcTotalPrimaryRSS(entry, toLevel){
+  const costTable = getCostTable(entry.itemKey, entry.partKey);
+  const primaryRes = getMarketPrimaryResource(entry);
+  if (!primaryRes) return 0;
+  let total = 0;
+  for (let L = 2; L <= toLevel; L++){
+    const p = getUpgradeChanceForLevel(L, MARKET_BOOST, entry.itemKey);
+    const attempts = p > 0 ? 1/p : 0;
+    let costMap = costTable[L] || {};
+    if (entry.itemKey === "abyssal_gear" && entry.partKey !== "helmet"){
+      costMap = applyAbyssalRatios(costMap, entry.partKey);
+    }
+    total += attempts * (costMap[primaryRes] || 0) * MARKET_REDUCTION;
+  }
+  return total;
+}
+
+function buildInvestmentCumulative(entry){
+  // cum[i] = total investment to reach level (i+1) from level 1
+  // Weight per level = avg attempts × resource cost per attempt
+  // This captures both decreasing upgrade chance AND increasing resource cost.
+  // MARKET_REDUCTION is a constant so it cancels in the ratio — omitted.
+  const costTable = getCostTable(entry.itemKey, entry.partKey);
+  const primaryRes = getMarketPrimaryResource(entry);
+  const cum = [0];
+  for (let L = 2; L <= entry.maxLevel; L++){
+    const p = getUpgradeChanceForLevel(L, MARKET_BOOST, entry.itemKey);
+    const attempts = p > 0 ? 1/p : 0;
+    let costMap = costTable[L] || {};
+    if (entry.itemKey === "abyssal_gear" && entry.partKey !== "helmet"){
+      costMap = applyAbyssalRatios(costMap, entry.partKey);
+    }
+    const costPerAttempt = primaryRes ? (costMap[primaryRes] || 0) : 1;
+    cum.push(cum[cum.length - 1] + attempts * costPerAttempt);
+  }
+  return cum;
+}
+
+function getMarketValue(entry, level, cum){
+  const lvl = clamp(Math.floor(level), 1, entry.maxLevel);
+  if (lvl <= 1) return entry.lvl1;
+  if (lvl >= entry.maxLevel) return entry.lvlMax;
+  const total = cum[entry.maxLevel - 1];
+  const ratio = total > 0 ? cum[lvl - 1] / total : 0;
+  return entry.lvl1 + ratio * (entry.lvlMax - entry.lvl1);
+}
+
+function buildMarketDropdown(){
+  const sel = document.getElementById("mktSelItem");
+  const prev = sel.value;
+  sel.innerHTML = "";
+  for (const entry of PRICE_CATALOG){
+    const item = ITEMS.find(x => x.key === entry.itemKey);
+    if (entry.hidden || (item && item.hidden)) continue;
+    const opt = document.createElement("option");
+    opt.value = entry.key;
+    opt.textContent = entry.label;
+    sel.appendChild(opt);
+  }
+  if (prev && sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+}
+
+function renderMarketOutput(){
+  const sel = document.getElementById("mktSelItem");
+  const lvlInp = document.getElementById("mktLevel");
+  const out = document.getElementById("mktOutput");
+
+  const entry = PRICE_CATALOG.find(x => x.key === sel.value);
+  if (!entry){ out.innerHTML = ""; return; }
+
+  lvlInp.max = entry.maxLevel;
+  const lvl = clamp(Math.floor(Number(lvlInp.value) || 1), 1, entry.maxLevel);
+
+  const cum = buildInvestmentCumulative(entry);
+  const total = cum[entry.maxLevel - 1];
+  const ratio = lvl <= 1 ? 0 : (total > 0 ? cum[lvl - 1] / total : 0);
+  const value = getMarketValue(entry, lvl, cum);
+
+  const primaryRes = getMarketPrimaryResource(entry);
+  const totalRSSMax = calcTotalPrimaryRSS(entry, entry.maxLevel);
+  const pureRssPerGem = (totalRSSMax > 0 && entry.lvlMax > entry.lvl1 && primaryRes !== "Gold")
+    ? totalRSSMax / (entry.lvlMax - entry.lvl1) : null;
+
+  const rows = [];
+  for (let L = 1; L <= entry.maxLevel; L++){
+    const v = getMarketValue(entry, L, cum);
+    const r = L <= 1 ? 0 : (total > 0 ? cum[L - 1] / total : 0);
+    const isCurrent = L === lvl;
+    rows.push(`
+      <tr${isCurrent ? ' style="background:rgba(255,209,122,.12);"' : ''}>
+        <td>${L}${isCurrent ? " ◀" : ""}</td>
+        <td class="right">${fmtPct(r)}</td>
+        <td class="right" style="${isCurrent ? "color:var(--gold); font-weight:800;" : ""}">${Math.round(v).toLocaleString()} gems</td>
+      </tr>
+    `);
+  }
+
+  out.innerHTML = `
+    <div class="kv" style="margin-bottom:14px;">
+      <div class="k">Item</div><div class="v gold">${entry.label}</div>
+      <div class="k">Level</div><div class="v">${lvl} / ${entry.maxLevel}</div>
+      <div class="k">Upgrade investment</div><div class="v">${fmtPct(ratio)}</div>
+      <div class="k">Lvl 1 market price</div><div class="v">${entry.lvl1.toLocaleString()} gems</div>
+      <div class="k">Lvl ${entry.maxLevel} market price</div><div class="v">${entry.lvlMax.toLocaleString()} gems</div>
+      <div class="k" style="font-size:13px; color:var(--text); font-weight:700;">Estimated value</div>
+      <div class="v gold" style="font-size:20px; font-weight:900;">${Math.round(value).toLocaleString()} gems</div>
+      ${pureRssPerGem !== null ? `
+      <div class="k">Pure ${primaryRes} / gem</div><div class="v blue">${(Math.round(pureRssPerGem * 10) / 10).toLocaleString()}</div>
+      <div style="grid-column:1/-1; display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
+        <input id="mktRatioGem"  type="number" min="0" step="any" placeholder="gems"
+          style="width:80px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:6px; color:var(--text); padding:4px 7px; font-size:12px;" />
+        <span style="color:var(--muted); font-size:12px;">gem  =</span>
+        <input id="mktRatioFrag" type="number" min="0" step="any" placeholder="${primaryRes.split(' ')[0].toLowerCase()}"
+          style="width:90px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:6px; color:var(--text); padding:4px 7px; font-size:12px;" />
+        <span style="color:var(--muted); font-size:12px;">${primaryRes}</span>
+      </div>
+      ` : ""}
+    </div>
+    <div class="chartwrap">
+      <table class="smalltable">
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th class="right">Investment</th>
+            <th class="right">Est. value</th>
+          </tr>
+        </thead>
+        <tbody>${rows.join("")}</tbody>
+      </table>
+    </div>
+    <div class="mini" style="margin-top:10px;">
+      Value interpolated from cumulative resource investment and expected upgrade attempts per level.
+    </div>
+  `;
+
+  if (pureRssPerGem !== null){
+    const gemInp  = document.getElementById("mktRatioGem");
+    const fragInp = document.getElementById("mktRatioFrag");
+    let updating = false;
+    gemInp.addEventListener("input", ()=>{
+      if (updating) return;
+      updating = true;
+      const g = parseFloat(gemInp.value);
+      fragInp.value = isFinite(g) && g >= 0 ? (Math.round(g * pureRssPerGem * 10) / 10) : "";
+      updating = false;
+    });
+    fragInp.addEventListener("input", ()=>{
+      if (updating) return;
+      updating = true;
+      const f = parseFloat(fragInp.value);
+      gemInp.value = isFinite(f) && f >= 0 ? (Math.round(f / pureRssPerGem * 1000) / 1000) : "";
+      updating = false;
+    });
+  }
+}
+
+function renderFarmOutput(){
+  const farmCalc = document.getElementById("farmCalc");
+  if (farmCalc.style.display === "none") return;
+
+  const sel        = document.getElementById("mktSelItem");
+  const unsup      = document.getElementById("farmUnsupported");
+  const farmInputs = document.getElementById("farmInputs");
+  const outRSS     = document.getElementById("farmOutRSS");
+  const outMax     = document.getElementById("farmOutMax");
+  const outLevel   = document.getElementById("farmOutLevel");
+  const blank      = () => { outRSS.innerHTML = outMax.innerHTML = outLevel.innerHTML = ""; };
+
+  const entry = PRICE_CATALOG.find(x => x.key === sel.value);
+  if (!entry){ blank(); return; }
+
+  const item = ITEMS.find(x => x.key === entry.itemKey);
+  const supported = item && item.kph && item.lootPerKill && item.lootResource;
+
+  if (!supported){
+    unsup.style.display = "";
+    farmInputs.style.display = "none";
+    blank();
+    return;
+  }
+  unsup.style.display = "none";
+  farmInputs.style.display = "";
+
+  const kph      = parseFloat(document.getElementById("farmKPH").value) || 0;
+  const multStr  = (document.getElementById("farmLootMult").value || "1").replace(/[x×]/gi, "");
+  const lootMult = parseFloat(multStr) || 1;
+  const waiting  = `<div class="mini">Enter kills per hour to see stats.</div>`;
+
+  if (kph <= 0){ outRSS.innerHTML = outMax.innerHTML = outLevel.innerHTML = waiting; return; }
+
+  const res         = item.lootResource;
+  const rssPerHour  = kph * lootMult * (item.lootPerKill[res] || 0);
+  const totalRSSMax = calcTotalPrimaryRSS(entry, entry.maxLevel);
+  const pureRpG     = (totalRSSMax > 0 && entry.lvlMax > entry.lvl1)
+                      ? totalRSSMax / (entry.lvlMax - entry.lvl1) : null;
+
+  // — Card 1: RSS Sales —
+  const gemPerHour = pureRpG ? rssPerHour / pureRpG : null;
+  outRSS.innerHTML = `
+    <div class="kv">
+      <div class="k">${res} / hr</div><div class="v">${fmtNum(rssPerHour)}</div>
+      ${gemPerHour !== null ? `
+      <div class="k">Gem / hr</div><div class="v gold">${(Math.round(gemPerHour*10)/10).toLocaleString()}</div>
+      <div class="k">Gems / day</div><div class="v gold">${(Math.round(gemPerHour*24*10)/10).toLocaleString()}</div>
+      ` : ""}
+    </div>`;
+
+  // — Card 2: Max Level Item Sales —
+  const hoursMax      = rssPerHour > 0 ? totalRSSMax / rssPerHour : null;
+  const itemsDayMax   = hoursMax ? 24 / hoursMax : null;
+  const gemsDayMax    = itemsDayMax ? itemsDayMax * entry.lvlMax : null;
+  outMax.innerHTML = `
+    <div class="kv">
+      <div class="k">Time per item</div><div class="v">${hoursMax ? durFromHours(hoursMax) : "—"}</div>
+      <div class="k">Items / day</div><div class="v">${itemsDayMax ? (Math.round(itemsDayMax*100)/100) : "—"}</div>
+      <div class="k">Sale price</div><div class="v gold">${entry.lvlMax.toLocaleString()} gems</div>
+      <div class="k">Gems / day</div><div class="v gold">${gemsDayMax ? (Math.round(gemsDayMax*10)/10).toLocaleString() : "—"}</div>
+    </div>`;
+
+  // — Card 3: Selected Level Item Sales —
+  const farmLvlInp = document.getElementById("farmLevel");
+  farmLvlInp.max   = entry.maxLevel;
+  const tgtLvl     = clamp(Math.floor(Number(farmLvlInp.value) || 1), 1, entry.maxLevel);
+  const totalRSSLvl = tgtLvl > 1 ? calcTotalPrimaryRSS(entry, tgtLvl) : 0;
+  const hoursLvl    = (rssPerHour > 0 && totalRSSLvl > 0) ? totalRSSLvl / rssPerHour : null;
+  const itemsDayLvl = hoursLvl ? 24 / hoursLvl : null;
+  const cum         = buildInvestmentCumulative(entry);
+  const gemSaleLvl  = getMarketValue(entry, tgtLvl, cum);
+  const gemsDayLvl  = itemsDayLvl ? itemsDayLvl * gemSaleLvl : null;
+  outLevel.innerHTML = `
+    <div class="kv">
+      <div class="k">Time per item</div><div class="v">${hoursLvl ? durFromHours(hoursLvl) : "—"}</div>
+      <div class="k">Items / day</div><div class="v">${itemsDayLvl ? (Math.round(itemsDayLvl*100)/100) : "—"}</div>
+      <div class="k">Sale price (lvl ${tgtLvl})</div><div class="v gold">${Math.round(gemSaleLvl).toLocaleString()} gems</div>
+      <div class="k">Gems / day</div><div class="v gold">${gemsDayLvl ? (Math.round(gemsDayLvl*10)/10).toLocaleString() : "—"}</div>
+    </div>`;
+}
+
+let marketInitialized = false;
+function initMarketPage(){
+  if (!marketInitialized){
+    buildMarketDropdown();
+    const sel = document.getElementById("mktSelItem");
+    const lvlInp = document.getElementById("mktLevel");
+    const amuletNote = document.getElementById("mktAmuletNote");
+    function updateAmuletNote(){
+      const v = sel.value;
+      amuletNote.style.display = (v === "primordial_amulet__base" || v === "primordial_amulet__primordial") ? "" : "none";
+    }
+    sel.addEventListener("change", ()=>{
+      const entry = PRICE_CATALOG.find(x => x.key === sel.value);
+      if (entry){
+        lvlInp.max = entry.maxLevel;
+        lvlInp.value = entry.maxLevel;
+      }
+      updateAmuletNote();
+      renderMarketOutput();
+      renderFarmOutput();
+    });
+    lvlInp.addEventListener("input", ()=>{ renderMarketOutput(); renderFarmOutput(); });
+    lvlInp.addEventListener("change", ()=>{ renderMarketOutput(); renderFarmOutput(); });
+    document.getElementById("farmKPH").addEventListener("input", ()=>renderFarmOutput());
+    document.getElementById("farmLootMult").addEventListener("input", ()=>renderFarmOutput());
+    document.getElementById("farmLevel").addEventListener("input", ()=>renderFarmOutput());
+    document.getElementById("farmLevel").addEventListener("change", ()=>renderFarmOutput());
+    marketInitialized = true;
+  }
+  updateAmuletNote();
+  renderMarketOutput();
+  renderFarmOutput();
+}
+
+/* =========================
+   SECRET UNLOCK
+   ========================= */
+(()=>{
+  let clicks = 0, timer;
+  document.querySelector('.brand .sub').addEventListener('click', ()=>{
+    clicks++;
+    clearTimeout(timer);
+    timer = setTimeout(()=>{ clicks = 0; }, 1500);
+    if (clicks >= 5){
+      clicks = 0;
+      const item = ITEMS.find(x=>x.key==='elemental_blade');
+      if (!item) return;
+      item.hidden = !item.hidden;
+      selItem.innerHTML = '';
+      for (const it of ITEMS){
+        if (it.hidden) continue;
+        const opt = document.createElement('option');
+        opt.value = it.key;
+        opt.textContent = it.name;
+        selItem.appendChild(opt);
+      }
+      for (const e of PRICE_CATALOG){ if (e.itemKey === 'elemental_blade') e.hidden = item.hidden; }
+      selItem.value = item.hidden ? 'abyssal_gear' : 'elemental_blade';
+      summaryGrid.innerHTML = '';
+      rebuildLevelInputs();
+      recalcAll();
+      buildMarketDropdown();
+    }
+  });
+})();
+
+// Farming calc unlock: click "Market Value" tab 10× within 2s
+(()=>{
+  let clicks = 0, timer;
+  const marketTabBtn = document.querySelector('.tabbtn[data-tab="market"]');
+  const farmCalc = document.getElementById("farmCalc");
+  marketTabBtn.addEventListener('click', ()=>{
+    clicks++;
+    clearTimeout(timer);
+    timer = setTimeout(()=>{ clicks = 0; }, 2000);
+    if (clicks >= 10){
+      clicks = 0;
+      const visible = farmCalc.style.display !== "none";
+      farmCalc.style.display = visible ? "none" : "block";
+      if (!visible) renderFarmOutput();
+    }
+  });
+})();
 
 /* =========================
    RESET
@@ -1848,6 +2329,7 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
 function resetAll(){
   inpBaseBoost.value = "";
   chkAura.checked = false;
+  inpCampLvl.value = "0";
   chkCharm.checked = false;
   chkMedium.checked = false;
   chkArtisan.checked = false;
