@@ -4,16 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Upgrade Cost Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#071a2b;
-      --panel:#0c2742;
-      --panel2:#0a223a;
-      --line:rgba(255,215,120,.18);
-      --text:rgba(255,255,255,.88);
-      --muted:rgba(255,255,255,.62);
-      --gold:#ffd17a;
-      --gold2:#ffbf4d;
+      --bg:#09090d;
+      --panel:rgba(8,18,38,0.75);
+      --panel2:rgba(5,12,28,0.72);
+      --line:rgba(242,200,107,0.18);
+      --text:#e4eef8;
+      --muted:#7aa8c4;
+      --gold:#f2c86b;
+      --gold2:#fce9aa;
       --blue:#2aa3ff;
       --bad:#ff6b6b;
       --ok:#4ee59a;
@@ -21,9 +23,11 @@
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1200px 700px at 20% 0%, rgba(42,163,255,.18), transparent 60%),
-                  radial-gradient(900px 600px at 90% 10%, rgba(255,209,122,.12), transparent 55%),
+      font-family:'Manrope','Segoe UI','Helvetica Neue',Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(80,150,255,.07), transparent 60%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(242,200,107,.07), transparent 55%),
                   var(--bg);
       color:var(--text);
     }
@@ -31,39 +35,42 @@
       position:sticky; top:0;
       display:flex; align-items:center; justify-content:space-between;
       padding:14px 18px;
-      background: rgba(6,18,30,.85);
+      background: rgba(5,10,22,.92);
       border-bottom:1px solid var(--line);
       backdrop-filter: blur(10px);
       z-index:50;
+      animation: fadeDown 0.5s ease both;
     }
     .brand{display:flex; gap:10px; align-items:baseline;}
     .brand h1{
       margin:0;
+      font-family:'Cinzel',serif;
       font-size:16px;
-      letter-spacing:.3px;
+      letter-spacing:.03em;
       color:var(--gold);
-      font-weight:700;
+      font-weight:500;
     }
     .brand .sub{font-size:12px;color:var(--muted)}
     .tabs{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
     .tabbtn{
       cursor:pointer;
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      color:var(--text);
-      padding:9px 12px;
-      border-radius:12px;
-      font-weight:600;
+      border:1px solid rgba(242,200,107,0.20);
+      background:rgba(242,200,107,0.07);
+      color:#f6d88e;
+      padding:7px 20px;
+      border-radius:999px;
+      font-family:'Manrope',sans-serif;
+      font-weight:500;
       font-size:13px;
       transition:.15s transform, .15s border-color, .15s background;
       user-select:none;
       white-space:nowrap;
     }
-    .tabbtn:hover{transform:translateY(-1px); border-color:rgba(255,209,122,.35)}
+    .tabbtn:hover{transform:translateY(-1px); border-color:rgba(242,200,107,.36); background:rgba(242,200,107,0.14);}
     .tabbtn.active{
-      border-color:rgba(255,209,122,.55);
-      background: linear-gradient(180deg, rgba(255,209,122,.16), rgba(255,255,255,.03));
-      color:var(--gold);
+      border-color:rgba(242,200,107,.52);
+      background:rgba(242,200,107,0.20);
+      color:var(--gold2);
     }
 
     .wrap{max-width:1200px; margin:0 auto; padding:18px;}
@@ -86,8 +93,8 @@
     }
 
     .boost-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(100,165,230,0.12);
       border-radius: 14px;
       padding: 14px;
       margin-bottom: 14px;
@@ -140,22 +147,25 @@
     }
 
     .card{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border-radius:16px;
+      border:1px solid rgba(100,165,230,0.14);
+      border-left:3px solid rgba(242,200,107,0.38);
+      background: rgba(8,18,38,0.75);
+      border-radius:18px;
       overflow:hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      box-shadow: 0 4px 20px rgba(0,0,0,.28), 0 0 8px rgba(100,160,255,.06);
+      animation: fadeUp 0.45s ease both;
     }
     .card .hd{
       padding:12px 14px;
-      border-bottom:1px solid var(--line);
+      border-bottom:1px solid rgba(242,200,107,0.12);
       display:flex; justify-content:space-between; align-items:center;
-      background: linear-gradient(180deg, rgba(255,209,122,.10), rgba(255,255,255,.01));
+      background: rgba(242,200,107,0.06);
       gap:10px;
     }
     .card .hd .t{
-      font-weight:800; color:var(--gold);
-      letter-spacing:.2px;
+      font-family:'Cinzel',serif;
+      font-weight:500; color:var(--gold);
+      letter-spacing:.03em;
       font-size:13px;
     }
     .card .hd .hint{font-size:12px; color:var(--muted)}
@@ -163,17 +173,21 @@
     label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
     input, select, textarea{
       width:100%;
-      padding:10px 10px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(3,10,18,.55);
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(242,200,107,0.22);
+      background: rgba(5,12,28,0.72);
       color:var(--text);
+      font-family:'Manrope',sans-serif;
+      font-size:14px;
       outline:none;
+      transition:border-color .18s;
     }
+    input::placeholder{ color:#2a4a62; }
     select{
       appearance:none;
       -webkit-appearance:none;
-      background-color:#0b1520;
+      border-radius:12px;
       padding-right:32px;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,.45)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;
@@ -181,12 +195,11 @@
       cursor:pointer;
     }
     option{
-      background:#0b1520;
+      background:#050c1a;
       color:var(--text);
     }
     input:focus, select:focus, textarea:focus{
-      border-color: rgba(42,163,255,.55);
-      box-shadow: 0 0 0 3px rgba(42,163,255,.15);
+      border-color: rgba(242,200,107,.50);
     }
     .row{display:flex; gap:10px;}
     .row > *{flex:1;}
@@ -202,8 +215,8 @@
     }
     .chkrow{
       display:flex; align-items:center; justify-content:space-between;
-      padding:8px 10px;
-      border:1px solid rgba(255,255,255,.10);
+      padding:8px 12px;
+      border:1px solid rgba(100,165,230,0.12);
       border-radius:12px;
       background: rgba(255,255,255,.02);
       margin-top:8px;
@@ -211,31 +224,31 @@
     }
     .chkrow input[type="checkbox"]{width:auto; transform:scale(1.05)}
     .warn{
-      padding:10px 12px;
+      padding:10px 14px;
       border-radius:12px;
       border:1px solid rgba(255,107,107,.35);
       background: rgba(255,107,107,.08);
-      color: rgba(255,255,255,.86);
+      color:var(--text);
       font-size:12px;
-      line-height:1.35;
+      line-height:1.5;
     }
     .ok{
-      padding:10px 12px;
+      padding:10px 14px;
       border-radius:12px;
-      border:1px solid rgba(78,229,154,.30);
-      background: rgba(78,229,154,.08);
-      color: rgba(255,255,255,.86);
+      border:1px solid rgba(78,229,154,.28);
+      background: rgba(78,229,154,.06);
+      color:var(--text);
       font-size:12px;
-      line-height:1.35;
+      line-height:1.5;
     }
     .mutedbox{
-      padding:10px 12px;
+      padding:10px 14px;
       border-radius:12px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(100,165,230,0.12);
       background: rgba(255,255,255,.02);
-      color: var(--muted);
+      color:var(--muted);
       font-size:12px;
-      line-height:1.35;
+      line-height:1.5;
     }
 
     .log{
@@ -253,7 +266,7 @@
       gap:8px 12px;
       align-items:baseline;
       padding:10px 12px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(100,165,230,0.12);
       background: rgba(255,255,255,.02);
       border-radius:14px;
     }
@@ -267,18 +280,19 @@
       font-size:12px;
       overflow:hidden;
       border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(100,165,230,0.12);
     }
     .smalltable th, .smalltable td{
       padding:9px 10px;
-      border-bottom:1px solid rgba(255,255,255,.08);
+      border-bottom:1px solid rgba(100,165,230,0.08);
       text-align:left;
       vertical-align:top;
     }
     .smalltable th{
       color:var(--gold);
-      font-weight:800;
-      background: rgba(255,209,122,.08);
+      font-family:'Cinzel',serif;
+      font-weight:500;
+      background: rgba(242,200,107,.07);
     }
     .smalltable tr:last-child td{border-bottom:none;}
     .right{ text-align:right; }
@@ -287,7 +301,7 @@
     .page.active{display:block;}
 
     .grid-market{
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 320px 740px;
       align-items:start;
     }
     .grid-farm-cards{
@@ -320,26 +334,31 @@
       overflow:auto;
       max-height: 420px;
       border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(100,165,230,0.12);
     }
     .credits{ min-height:120px; }
 
     .btnrow{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;}
     .btn{
       cursor:pointer;
-      border:none;
-      background: linear-gradient(180deg, rgba(255,209,122,.22), rgba(255,191,77,.10));
-      border:1px solid rgba(255,209,122,.40);
-      color: rgba(255,255,255,.92);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:800;
+      background:rgba(242,200,107,0.10);
+      border:1px solid rgba(242,200,107,.30);
+      color:var(--gold2);
+      padding:9px 22px;
+      border-radius:999px;
+      font-family:'Manrope',sans-serif;
+      font-weight:500;
       font-size:13px;
+      transition:background .18s, border-color .18s, transform .1s;
+    }
+    .btn:hover{
+      background:rgba(242,200,107,0.20);
+      border-color:rgba(242,200,107,.48);
+      transform:translateY(-1px);
     }
     .btn.secondary{
-      background: rgba(255,255,255,.04);
+      background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.14);
-      font-weight:700;
       color:var(--muted);
     }
     .btn:active{transform: translateY(1px);}
@@ -347,11 +366,14 @@
 
     /* Page 3 */
     .summarygrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
+      column-count: 2;
+      column-gap: 14px;
     }
-    @media (max-width: 1100px){ .summarygrid{grid-template-columns:1fr;} }
+    .summarygrid .card{
+      break-inside: avoid;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 1100px){ .summarygrid{ column-count: 1; } }
     .itemHead{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
       flex-wrap:wrap;
@@ -369,6 +391,40 @@
       font-size:12px; color:var(--muted);
       line-height:1.35;
     }
+    .summary-top{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+      margin-bottom:14px;
+    }
+    @media (max-width:1100px){ .summary-top{ grid-template-columns:1fr; } }
+    .summarygrid .card{
+      display:flex;
+      flex-direction:column;
+    }
+    .summarygrid .card .bd{
+      padding:12px;
+    }
+    .sum-bd{
+      display:flex;
+      flex-direction:column;
+      flex:1;
+    }
+    .sum-spacer{ flex:1; min-height:12px; }
+    .btn.sm{ padding:5px 12px; font-size:11px; }
+    @keyframes cardFlash {
+      0%,100%{ box-shadow: 0 4px 20px rgba(0,0,0,.28), 0 0 8px rgba(100,160,255,.06); }
+      50%    { box-shadow: 0 0 0 2px rgba(242,200,107,0.75), 0 4px 24px rgba(242,200,107,.28); }
+    }
+    .card-flash{ animation: cardFlash 0.65s ease-in-out 2; }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:translateY(0)} }
+    .card:nth-child(1){animation-delay:0.05s}
+    .card:nth-child(2){animation-delay:0.10s}
+    .card:nth-child(3){animation-delay:0.15s}
+    .card:nth-child(4){animation-delay:0.20s}
+    .card:nth-child(5){animation-delay:0.25s}
+    .card:nth-child(6){animation-delay:0.30s}
   </style>
 </head>
 
@@ -393,7 +449,7 @@
         <!-- BOX 1 -->
         <div class="card">
           <div class="hd">
-            <div class="t">Box 1 — Boost + Resource Reduction</div>
+            <div class="t">Boost + Resource Reduction</div>
             <div class="hint">global inputs</div>
           </div>
           <div class="bd">
@@ -421,14 +477,14 @@
               </div>
                <div></div>
               <div class="mini">
-                Final boost is calculated automatically and capped at 6.00x.
+                Final boost is calculated and capped at 6.00x.
               </div>
 
             </div>
 
             <div style="height:12px"></div>
 
-            <label>Base camp resource efficiency level (0–20)</label>
+            <label>Basecamp resource efficiency level (0–20)</label>
             <input id="inpCampLvl" type="number" min="0" max="20" value="0" />
             <div></div>
 
@@ -473,7 +529,7 @@
         <!-- BOX 2 -->
         <div class="card">
           <div class="hd">
-            <div class="t">Box 2 — Item + Level Range</div>
+            <div class="t">Item + Level Range</div>
             <div class="hint">what you’re upgrading</div>
           </div>
           <div class="bd">
@@ -490,7 +546,7 @@
               (Power, Speed, Weaponry, Defence) are selected.
             </div>
             <div id="abyssalNote" class="ok" style="display:none;">
-              For abyssal axe, Use abyssal chestplate for calculation.
+              For abyssal axe, use abyssal chestplate for calculation.
               Gold will be exactly the same but the other materials will vary,
               though only slightly.
             </div>
@@ -510,7 +566,7 @@
           <!-- BOX 3 -->
           <div class="card">
             <div class="hd">
-              <div class="t">Box 3 — KPH + Loot Multiplier</div>
+              <div class="t">KPH + Loot Multiplier</div>
               <div class="hint">only some items</div>
             </div>
             <div class="bd">
@@ -537,7 +593,7 @@
           <!-- BOX 4 -->
           <div class="card" style="flex:1;">
             <div class="hd">
-              <div class="t">Box 4 — Output Log</div>
+              <div class="t">Output Log</div>
               <div class="hint">totals + breakdown</div>
             </div>
             <div class="bd">
@@ -612,31 +668,101 @@
 
     <!-- PAGE 3 -->
     <div class="page" id="page-summary">
-      <div class="card" style="margin-bottom:14px;">
-        <div class="hd">
-          <div class="t">Full Summary</div>
-          <div class="hint">quick-view for all items</div>
-        </div>
-        <div class="bd">
-          <div class="mutedbox">
-            <p style="margin:0 0 6px 0;">
-              Defaults assume full upgrade range (usually 1→20, Aether 1→40).
-              Toggle “Enable level x–y” per item to customize.
-              Loot/time fields appear only for loot-supported items.
-            </p>
-            <p style="margin:0;">
-              <strong>Primordial note:</strong>
-              The 5,000,000 Amulet Fragment merge cost is applied
-              <em>only</em> when at least one base amulet
-              (Power, Speed, Weaponry, or Defence) is enabled.
-            </p>
-          </div>
+      <div class="summary-top">
 
-          <div class="btnrow">
-            <button class="btn" id="btnSummaryRefresh">Refresh Summary</button>
+        <!-- Notes card -->
+        <div class="card">
+          <div class="hd">
+            <div class="t">Full Summary</div>
+            <div class="hint">quick-view for all items</div>
+          </div>
+          <div class="bd">
+            <div class="mutedbox">
+              <p style="margin:0 0 6px 0;">
+                Use the <strong>Current</strong> and <strong>Target</strong> inputs on each item card to set a custom level range.
+                Defaults assume full range (1→20, Aether 1→40).
+                KPH and loot mult fields appear only for loot-supported items.
+              </p>
+              <p style="margin:0;">
+                <strong>Primordial note:</strong>
+                The 5,000,000 Amulet Fragment merge cost is applied
+                <em>only</em> when at least one base amulet
+                (Power, Speed, Weaponry, or Defence) is included in the range.
+              </p>
+            </div>
+            <div class="btnrow">
+              <button class="btn" id="btnSummaryRefresh">Refresh Summary</button>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="mini" style="margin-bottom:8px;">Click any of these to quick-jump to the item you're looking for:</div>
+              <div id="summaryJumpBtns" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+            </div>
           </div>
         </div>
+
+        <!-- Boost + Reduction mirror card -->
+        <div class="card">
+          <div class="hd">
+            <div class="t">Boost + Resource Reduction</div>
+            <div class="hint">synced with main tab</div>
+          </div>
+          <div class="bd">
+            <div class="boost-card">
+              <div class="boost-header">
+                <div>
+                  <div class="boost-title">Item Upgrade Boost</div>
+                  <div class="boost-sub">Enter value from Home tab.</div>
+                </div>
+                <div class="boost-final"><span id="s_outBoost">1.00x</span></div>
+              </div>
+              <input id="s_inpBaseBoost" type="text" placeholder="e.g. 3.77x" />
+              <div class="boost-row">
+                <span>Item Upgrade Aura (1.5x)</span>
+                <label class="chk-wrap">
+                  <input id="s_chkAura" type="checkbox" />
+                </label>
+              </div>
+              <div class="mini">Capped at 6.00x.</div>
+            </div>
+
+            <div style="height:10px"></div>
+
+            <label>Base camp resource efficiency level (0–20)</label>
+            <input id="s_inpCampLvl" type="number" min="0" max="20" value="0" />
+
+            <div class="chkrow">
+              <div>
+                <div style="font-weight:800; color:var(--text); font-size:12px;">Charm of Efficiency</div>
+                <div class="mini">0.50x if owned</div>
+              </div>
+              <input id="s_chkCharm" type="checkbox" />
+            </div>
+            <div class="chkrow">
+              <div>
+                <div style="font-weight:800; color:var(--text); font-size:12px;">Medium Achievement Tier</div>
+                <div class="mini">0.98x if owned</div>
+              </div>
+              <input id="s_chkMedium" type="checkbox" />
+            </div>
+            <div class="chkrow">
+              <div>
+                <div style="font-weight:800; color:var(--text); font-size:12px;">Artisan Blessing</div>
+                <div class="mini">0.95x if owned and used</div>
+              </div>
+              <input id="s_chkArtisan" type="checkbox" />
+            </div>
+
+            <div style="height:10px"></div>
+            <div class="kv">
+              <div class="k">Total resource cost reduction</div>
+              <div class="v gold" id="s_outReduction">1.0000x</div>
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      <hr style="border:none; border-top:3px solid rgba(242,200,107,0.15); margin:20px 0;" />
 
       <div class="summarygrid" id="summaryGrid"></div>
     </div>
@@ -755,7 +881,7 @@ const ITEMS = [
     lootResource:"Viridian Shards", lootPerKill:{ "Viridian Shards":0.0396 } },
   { key:"dreadfang_shiv", name:"Dreadfang Shiv", multi:false, kph:true,
     lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 } },
-  { key:"elemental_blade", name:"Elemental Blade", multi:false, kph:false, hidden:true }
+  { key:"elemental_blade", name:"Elemental Blade", multi:false, kph:false }
 ];
 
 /* =========================
@@ -1100,8 +1226,7 @@ function getDisplayResourceForBreakdown(itemKey){
   if (itemKey === "aether_blade") return "Aether Shards";
   if (itemKey === "primordial_amulet") return "Amulet Fragments";
   if (itemKey === "elemental_blade") return "Ruby";
-  // default: show Gold if it exists, else sum
-  return null;
+  return "Gold";
 }
 
 /* =========================
@@ -1149,7 +1274,7 @@ document.getElementById("btnSummaryRefresh").addEventListener("click", ()=>rende
 
 document.getElementById("btnReset").addEventListener("click", () => resetAll());
 
-// NOTE: selItem change is handled specially to avoid the old “multi→single” stale UI calc bug.
+// NOTE: selItem change is handled specially to avoid the old "multi→single" stale UI calc bug.
 [inpBaseBoost, chkAura, inpCampLvl, chkCharm, chkMedium, chkArtisan, inpKPH, inpLootMult].forEach(el=>{
   el.addEventListener("input", () => recalcAll());
   el.addEventListener("change", () => recalcAll());
@@ -1179,6 +1304,51 @@ function init(){
   recalcAll();
 }
 init();
+
+/* summary card → Box 1 sync */
+(()=>{
+  const textPairs = [["s_inpBaseBoost","inpBaseBoost"],["s_inpCampLvl","inpCampLvl"]];
+  textPairs.forEach(([sId, id])=>{
+    const el = document.getElementById(sId);
+    ["input","change"].forEach(ev=>el.addEventListener(ev,()=>{
+      document.getElementById(id).value = el.value;
+      recalcAll();
+    }));
+  });
+  const chkPairs = [["s_chkAura","chkAura"],["s_chkCharm","chkCharm"],["s_chkMedium","chkMedium"],["s_chkArtisan","chkArtisan"]];
+  chkPairs.forEach(([sId, id])=>{
+    document.getElementById(sId).addEventListener("change",()=>{
+      document.getElementById(id).checked = document.getElementById(sId).checked;
+      recalcAll();
+    });
+  });
+})();
+
+/* summary jump buttons */
+function jumpToCard(itemKey){
+  if (!summaryGrid.children.length) renderSummaryPage();
+  const card = document.getElementById(`sumCard-${itemKey}`);
+  if (!card) return;
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  card.classList.remove('card-flash');
+  void card.offsetWidth;
+  setTimeout(()=>{
+    card.classList.add('card-flash');
+    card.addEventListener('animationend', ()=>card.classList.remove('card-flash'), {once:true});
+  }, 500);
+}
+
+(()=>{
+  const container = document.getElementById("summaryJumpBtns");
+  if (!container) return;
+  ITEMS.filter(x=>!x.hidden).forEach(item=>{
+    const btn = document.createElement("button");
+    btn.className = "btn sm";
+    btn.textContent = item.name;
+    btn.addEventListener("click", ()=>jumpToCard(item.key));
+    container.appendChild(btn);
+  });
+})();
 
 /* =========================
    RESOURCE REDUCTION
@@ -1478,12 +1648,28 @@ function calcKPHSectionForItem(itemKey, totalResourcesNeeded, kph, lootMult){
      const red = getReductionMultiplier();
 
      outBoost.textContent = boostMult.toFixed(2) + "x";
-
      outReduction.textContent = red.total.toFixed(4) + "x";
+
+     const sB = document.getElementById("s_outBoost");
+     const sR = document.getElementById("s_outReduction");
+     if (sB) sB.textContent = boostMult.toFixed(2) + "x";
+     if (sR) sR.textContent = red.total.toFixed(4) + "x";
+     syncInputsToSummary();
 
      renderStatsPage(boostMult, red);
      renderCalculatorOutput(boostMult, red.total);
      renderSummaryPage(true);
+   }
+
+   function syncInputsToSummary(){
+     const s = id => document.getElementById(id);
+     if (!s("s_inpBaseBoost")) return;
+     s("s_inpBaseBoost").value  = inpBaseBoost.value;
+     s("s_chkAura").checked     = chkAura.checked;
+     s("s_inpCampLvl").value    = inpCampLvl.value;
+     s("s_chkCharm").checked    = chkCharm.checked;
+     s("s_chkMedium").checked   = chkMedium.checked;
+     s("s_chkArtisan").checked  = chkArtisan.checked;
    }
 
 function renderCalculatorOutput(boostMult, reductionMult){
@@ -1635,7 +1821,7 @@ function renderCalculatorOutput(boostMult, reductionMult){
             <th>Upgrade</th>
             <th class="right">Chance</th>
             <th class="right">Avg attempts</th>
-            <th class="right">Expected primary cost</th>
+            <th class="right">Expected cost${dispRes ? ` (${dispRes})` : ""}</th>
           </tr>
         </thead>
         <tbody>
@@ -1686,6 +1872,7 @@ function renderStatsPage(boostMult, red){
 function makeSummaryCard(item){
   const card = document.createElement("div");
   card.className = "card";
+  card.id = `sumCard-${item.key}`;
 
   const isAether = item.key === "aether_blade";
   const defMin = 1;
@@ -1698,46 +1885,30 @@ function makeSummaryCard(item){
         <div class="hint">${item.kph ? "loot/time supported" : "loot/time not supported"}</div>
       </div>
     </div>
-    <div class="bd">
-      <div class="toggleline">
-        <label class="inline">
-          <input type="checkbox" class="sumEnable" data-item="${item.key}">
-          Enable level x–y
-        </label>
-
-        ${item.kph ? `
-          <div class="row" style="flex:1; min-width:260px;">
-            <div>
-              <label>KPH</label>
-              <input class="sumKPH" data-item="${item.key}" type="number" min="0" step="1" placeholder="e.g. 550">
-            </div>
-            <div>
-              <label>Loot mult</label>
-              <input class="sumLootMult" data-item="${item.key}" type="text" placeholder="e.g. 7.34x">
-            </div>
+    <div class="bd sum-bd">
+      ${item.kph ? `
+        <div class="row" style="margin-bottom:8px;">
+          <div>
+            <label>KPH</label>
+            <input class="sumKPH" data-item="${item.key}" type="number" min="0" step="1" placeholder="e.g. 550">
           </div>
-        ` : `
-          <div class="thin">—</div>
-        `}
-      </div>
-
-      <div class="thin" style="margin-top:8px;">
-        Default range: ${defMin} → ${defMax}
-      </div>
-      <div class="thin" style="margin-top:8px;">
-
-      </div>
-      <div class="mutedbox" style="margin-top:10px; display:none;" id="sumRanges-${item.key}"></div>
-
-      <div class="mutedbox" style="margin-top:10px;">
-        <div class="kv" id="sumOut-${item.key}">
-          <div class="k">Total cost</div><div class="v">—</div>
-          <div class="k">Flat rate loot / kill</div><div class="v">—</div>
-          <div class="k">Boosted loot / kill</div><div class="v">—</div>
-          <div class="k">Loot / hour</div><div class="v">—</div>
-          <div class="k">Total kills for required loot</div><div class="v">—</div>
-          <div class="k">Total time</div><div class="v">—</div>
+          <div>
+            <label>Loot mult</label>
+            <input class="sumLootMult" data-item="${item.key}" type="text" placeholder="e.g. 7.34x">
+          </div>
         </div>
+      ` : ``}
+      <div class="mutedbox" id="sumRanges-${item.key}"></div>
+
+      <div class="sum-spacer"></div>
+
+      <div class="kv" id="sumOut-${item.key}" style="margin-top:10px;">
+        <div class="k">Total cost</div><div class="v">—</div>
+        <div class="k">Flat rate loot / kill</div><div class="v">—</div>
+        <div class="k">Boosted loot / kill</div><div class="v">—</div>
+        <div class="k">Loot / hour</div><div class="v">—</div>
+        <div class="k">Total kills for required loot</div><div class="v">—</div>
+        <div class="k">Total time</div><div class="v">—</div>
       </div>
     </div>
   `;
@@ -1750,7 +1921,6 @@ function buildSummaryRangesUI(itemKey, containerEl){
   const item = ITEMS.find(x=>x.key===itemKey);
   const box = document.getElementById(`sumRanges-${itemKey}`);
   box.innerHTML = "";
-  box.style.display = "none";
 
   const makeBlock = (partKey, label, defaultChecked=true, min=1, max=20)=>{
     const wrap = document.createElement("div");
@@ -1835,14 +2005,10 @@ function getDefaultPartsForItem(itemKey){
 }
 
 function readSummaryParts(itemKey){
-  const enable = document.querySelector(`.sumEnable[data-item="${itemKey}"]`)?.checked;
   const rangeBox = document.getElementById(`sumRanges-${itemKey}`);
+  const parts = rangeBox ? getSelectedPartsFromContainer(rangeBox, itemKey) : [];
+  if (!parts.length) return getDefaultPartsForItem(itemKey);
 
-  if (!enable) return getDefaultPartsForItem(itemKey);
-
-  const parts = getSelectedPartsFromContainer(rangeBox, itemKey);
-  // clamp current/target to sane bounds (already set in inputs, but still)
-  const item = ITEMS.find(x=>x.key===itemKey);
   const max = (itemKey==="aether_blade") ? 40 : 20;
   for (const p of parts){
     p.cur = clamp(Math.floor(p.cur||1), 1, max);
@@ -1852,7 +2018,7 @@ function readSummaryParts(itemKey){
 }
 
 function renderSummaryPage(soft=false){
-  // if they’re not on the summary page and this is a “soft” update, chill a bit
+  // if they’re not on the summary page and this is a "soft" update, chill a bit
   const isOnSummary = document.getElementById("page-summary").classList.contains("active");
   if (soft && !isOnSummary && summaryGrid.children.length) return;
 
@@ -1864,14 +2030,6 @@ function renderSummaryPage(soft=false){
       const card = makeSummaryCard(item);
       summaryGrid.appendChild(card);
       buildSummaryRangesUI(item.key, card);
-
-      // toggle show/hide ranges
-      const en = card.querySelector(`.sumEnable[data-item="${item.key}"]`);
-      const box = document.getElementById(`sumRanges-${item.key}`);
-      en.addEventListener("change", ()=>{
-        box.style.display = en.checked ? "block" : "none";
-        renderSummaryPage(true);
-      });
 
       // kph inputs
       card.querySelectorAll(".sumKPH,.sumLootMult").forEach(inp=>{
@@ -1939,7 +2097,7 @@ function renderSummaryPage(soft=false){
     `;
 
     // build "Total resources" line
-    const parentMuted = out.closest(".mutedbox");
+    const parentMuted = out;
 
     // remove the previous resources line if it exists (prevents duplicates)
     const maybeOld = parentMuted.previousElementSibling;
@@ -1988,7 +2146,7 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     const id = tab==="calc" ? "page-calc" : tab==="stats" ? "page-stats" : tab==="summary" ? "page-summary" : "page-market";
     document.getElementById(id).classList.add("active");
 
-    if (id === "page-summary") renderSummaryPage();
+    if (id === "page-summary") { syncInputsToSummary(); renderSummaryPage(); }
     if (id === "page-market") initMarketPage();
   });
 });
@@ -2013,7 +2171,7 @@ const PRICE_CATALOG = [
   { key:"viridian_gear__greaves",        label:"Viridian Greaves",    itemKey:"viridian_gear",      partKey:"greaves",     lvl1:100,  lvlMax:2000,  maxLevel:20 },
   { key:"viridian_gear__chestplate",     label:"Viridian Chestplate", itemKey:"viridian_gear",      partKey:"chestplate",  lvl1:150,  lvlMax:3000,  maxLevel:20 },
   { key:"dreadfang_shiv__main",          label:"Dreadfang Shiv",      itemKey:"dreadfang_shiv",     partKey:"main",        lvl1:400,  lvlMax:4000,  maxLevel:20 },
-  { key:"elemental_blade__main",         label:"Elemental Blade",     itemKey:"elemental_blade",    partKey:"main",        lvl1:7000, lvlMax:10000, maxLevel:20, hidden:true },
+  { key:"elemental_blade__main",         label:"Elemental Blade",     itemKey:"elemental_blade",    partKey:"main",        lvl1:99999, lvlMax:99999, maxLevel:20 },
 ];
 
 function getMarketPrimaryResource(entry){
@@ -2138,6 +2296,7 @@ function renderMarketOutput(){
       <div class="k" style="font-size:13px; color:var(--text); font-weight:700;">Estimated value</div>
       <div class="v gold" style="font-size:20px; font-weight:900;">${Math.round(value).toLocaleString()} gems</div>
       ${pureRssPerGem !== null ? `
+      <div style="grid-column:1/-1; border-top:1px solid rgba(255,255,255,0.07); margin:6px 0;"></div>
       <div class="k">Pure ${primaryRes} / gem</div><div class="v blue">${(Math.round(pureRssPerGem * 10) / 10).toLocaleString()}</div>
       <div style="grid-column:1/-1; display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
         <input id="mktRatioGem"  type="number" min="0" step="any" placeholder="gems"
