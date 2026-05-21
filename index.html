@@ -317,6 +317,19 @@
         align-items:flex-start;
         gap:10px;
         padding:12px 14px;
+        transition: gap 0.25s ease;
+      }
+      .topbar--compact{ gap:0; }
+      .brand{
+        overflow:hidden;
+        max-height:80px;
+        opacity:1;
+        transition: max-height 0.28s ease, opacity 0.22s ease;
+      }
+      .topbar--compact .brand{
+        max-height:0;
+        opacity:0;
+        pointer-events:none;
       }
       .tabs{ gap:6px; }
       .tabbtn{ font-size:12px; padding:7px 10px; }
@@ -2537,6 +2550,14 @@ function resetAll(){
 
   recalcAll();
 }
+
+(function(){
+  var topbar = document.querySelector('.topbar');
+  window.addEventListener('scroll', function(){
+    if(window.innerWidth > 640){ topbar.classList.remove('topbar--compact'); return; }
+    topbar.classList.toggle('topbar--compact', window.scrollY > 50);
+  }, {passive:true});
+})();
 </script>
 </body>
 </html>
