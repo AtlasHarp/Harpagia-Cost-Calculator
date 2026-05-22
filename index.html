@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.80" />
   <title>Upgrade Cost Calculator</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -2557,6 +2557,16 @@ function resetAll(){
     if(window.innerWidth > 640){ topbar.classList.remove('topbar--compact'); return; }
     topbar.classList.toggle('topbar--compact', window.scrollY > 50);
   }, {passive:true});
+})();
+
+(function () {
+    function updateEmbedZoom() {
+        if (window.self !== window.top) {
+            document.documentElement.style.zoom = screen.width <= 680 ? '0.80' : '';
+        }
+    }
+    updateEmbedZoom();
+    window.addEventListener('resize', updateEmbedZoom);
 })();
 </script>
 </body>
