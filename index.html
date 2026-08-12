@@ -252,7 +252,7 @@
     }
 
     .log{
-      height: 560px;
+      max-height: 560px;
       overflow:auto;
       padding-right:6px;
     }
@@ -296,6 +296,46 @@
     }
     .smalltable tr:last-child td{border-bottom:none;}
     .right{ text-align:right; }
+
+    /* Output log — hero result + stat chips + collapsible breakdown */
+    .result-hero{
+      text-align:center;
+      padding:18px 14px;
+      border:1px solid rgba(242,200,107,0.24);
+      border-radius:16px;
+      background:
+        radial-gradient(120% 140% at 50% 0%, rgba(242,200,107,0.10), transparent 70%),
+        rgba(242,200,107,0.04);
+      margin-bottom:14px;
+    }
+    .hero-cost{ font-family:'Cinzel',serif; font-size:26px; font-weight:600; color:var(--gold); line-height:1.15; word-break:break-word; }
+    .hero-cost .hero-unit{ font-size:15px; color:var(--gold2); font-weight:500; }
+    .hero-range{ font-size:12.5px; color:var(--muted); margin-top:7px; cursor:help; }
+    .hero-range b{ font-weight:700; }
+    .hero-range .lo b{ color:var(--ok); }
+    .hero-range .hi b{ color:#f2a96b; }
+    .hero-note{ font-size:11px; color:var(--muted); opacity:.8; margin-top:3px; }
+    .hero-note .lo{ color:var(--ok); }
+    .hero-note .hi{ color:#f2a96b; }
+    .hero-sub{ font-size:12px; color:var(--muted); margin-top:6px; letter-spacing:.02em; }
+    .hero-time{ font-size:15px; color:var(--blue); font-weight:700; margin-top:12px; }
+    .chiprow{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+    .statchip{
+      font-size:12px; color:var(--muted);
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(100,165,230,0.14);
+      border-radius:999px; padding:5px 12px; white-space:nowrap;
+    }
+    .statchip b{ color:var(--text); font-weight:700; }
+    details.breakdown{ margin-top:4px; }
+    details.breakdown > summary{
+      cursor:pointer; list-style:none; user-select:none;
+      font-size:13px; color:var(--gold); font-family:'Cinzel',serif; letter-spacing:.02em;
+      padding:10px 0; border-top:1px solid rgba(242,200,107,0.12);
+    }
+    details.breakdown > summary::-webkit-details-marker{ display:none; }
+    details.breakdown > summary::before{ content:'\25B8\00a0'; color:var(--muted); }
+    details.breakdown[open] > summary::before{ content:'\25BE\00a0'; }
 
     .page{display:none;}
     .page.active{display:block;}
@@ -348,6 +388,15 @@
       max-height: 420px;
       border-radius:14px;
       border:1px solid rgba(100,165,230,0.12);
+    }
+    /* Stats chance table: show all 19 rows with no inner scroll, and keep the
+       six columns fitting edge-to-edge (no horizontal scroll) on phone + PC. */
+    #page-stats .chartwrap{ max-height:none; overflow:visible; }
+    #chanceTable{ table-layout:fixed; }
+    #chanceTable th, #chanceTable td{ padding:8px 8px; }
+    #chanceTable th:first-child, #chanceTable td:first-child{ width:12%; }
+    @media (max-width:640px){
+      #chanceTable th, #chanceTable td{ padding:7px 4px; font-size:11px; }
     }
     .credits{ min-height:120px; }
     .credits p{ font-family:'Manrope','Segoe UI','Helvetica Neue',Arial,sans-serif; font-size:13px; color:var(--text); line-height:1.65; margin:0 0 10px 0; }
@@ -493,7 +542,7 @@
               </div>
                <div></div>
               <div class="mini">
-                Final boost is calculated and capped at 6.00x.
+                Final boost = your base value &times; 1.5 when the aura is active.
               </div>
 
             </div>
@@ -607,7 +656,7 @@
           </div>
 
           <!-- BOX 4 -->
-          <div class="card" style="flex:1;">
+          <div class="card">
             <div class="hd">
               <div class="t">Output Log</div>
               <div class="hint">totals + breakdown</div>
@@ -640,17 +689,21 @@
               <table class="smalltable" id="chanceTable">
                 <thead>
                   <tr>
-                    <th>Level</th>
-                    <th class="right">Base Chance</th>
-                    <th class="right">Your upgrade chance</th>
-                    <th class="right">Avg attempts</th>
+                    <th>Lvl</th>
+                    <th class="right">Base</th>
+                    <th class="right">Your chance</th>
+                    <th class="right">Avg tries</th>
+                    <th class="right">50% by</th>
+                    <th class="right">90% by</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
               </table>
             </div>
             <div class="mini" style="margin-top:10px;">
-              Avg attempts uses 1/p, with p capped at 100%.
+              Avg attempts uses 1/p (the mean). Because each upgrade is a coin-flip, the real cost is
+              very swingy: <strong>50% by</strong> / <strong>90% by</strong> show the attempts needed for a
+              50% / 90% chance of at least one success — a truer sense of a lucky vs unlucky run.
             </div>
           </div>
         </div>
@@ -738,7 +791,7 @@
                   <input id="s_chkAura" type="checkbox" />
                 </label>
               </div>
-              <div class="mini">Capped at 6.00x.</div>
+              <div class="mini">&times;1.5 when the aura is active.</div>
             </div>
 
             <div style="height:10px"></div>
@@ -883,21 +936,48 @@ const BASE_CHANCE = {
    ITEMS + RULES
    lootResource: the ONE resource used for loot/time (gold ignored)
    ========================= */
+// `parts` is the single source of truth for each item's upgrade parts:
+// which parts exist, their display label, whether they're enabled by default,
+// and their level range. rebuildLevelInputs / prettyPartLabel /
+// buildSummaryRangesUI / getDefaultPartsForItem all read from it.
 const ITEMS = [
-  { key:"abyssal_gear",  name:"Abyssal Gear", multi:true,  kph:false, special:"ratio3" },
-  { key:"aether_blade",  name:"Aether Blade", multi:false, kph:false, special:"aether" },
+  { key:"abyssal_gear",  name:"Abyssal Gear", multi:true,  kph:false, special:"ratio3",
+    parts:[
+      { key:"helmet",     label:"Abyssal Helmet",     default:true, min:1, max:20 },
+      { key:"greaves",    label:"Abyssal Greaves",    default:true, min:1, max:20 },
+      { key:"chestplate", label:"Abyssal Chestplate", default:true, min:1, max:20 },
+    ] },
+  { key:"aether_blade",  name:"Aether Blade", multi:false, kph:false, special:"aether",
+    parts:[ { key:"main", label:"Aether Blade", default:true, min:1, max:40 } ] },
   { key:"primordial_amulet", name:"Primordial Amulet", multi:true, kph:true, special:"primordial5",
-    lootResource:"Amulet Fragments", lootPerKill: { "Amulet Fragments": 62.5 } },
-  { key:"keris_dagger",  name:"Keris Dagger", multi:false, kph:false },
+    lootResource:"Amulet Fragments", lootPerKill: { "Amulet Fragments": 62.5 },
+    parts:[
+      { key:"power",      label:"Power Amulet",      default:false, min:1, max:20 },
+      { key:"speed",      label:"Speed Amulet",      default:false, min:1, max:20 },
+      { key:"weaponry",   label:"Weaponry Amulet",   default:false, min:1, max:20 },
+      { key:"defence",    label:"Defence Amulet",    default:false, min:1, max:20 },
+      { key:"primordial", label:"Primordial Amulet", default:true,  min:1, max:20 },
+    ] },
+  { key:"keris_dagger",  name:"Keris Dagger", multi:false, kph:false,
+    parts:[ { key:"main", label:"Keris Dagger", default:true, min:1, max:20 } ] },
   { key:"abyssal_greataxe", name:"Abyssal Greataxe", multi:false, kph:true,
-    lootResource:"Abyssal Shards", lootPerKill:{ "Abyssal Shards":0.0396 } },
+    lootResource:"Abyssal Shards", lootPerKill:{ "Abyssal Shards":0.0396 },
+    parts:[ { key:"main", label:"Abyssal Greataxe", default:true, min:1, max:20 } ] },
   { key:"swift_blade",   name:"Swift Blade", multi:false, kph:true,
-    lootResource:"Anubian Shards", lootPerKill:{ "Anubian Shards":675 } },
+    lootResource:"Anubian Shards", lootPerKill:{ "Anubian Shards":675 },
+    parts:[ { key:"main", label:"Swift Blade", default:true, min:1, max:20 } ] },
   { key:"viridian_gear", name:"Viridian Gear", multi:true, kph:true, special:"viridian3",
-    lootResource:"Viridian Shards", lootPerKill:{ "Viridian Shards":0.0396 } },
+    lootResource:"Viridian Shards", lootPerKill:{ "Viridian Shards":0.0396 },
+    parts:[
+      { key:"helmet",     label:"Viridian Helmet",     default:true, min:1, max:20 },
+      { key:"greaves",    label:"Viridian Greaves",    default:true, min:1, max:20 },
+      { key:"chestplate", label:"Viridian Chestplate", default:true, min:1, max:20 },
+    ] },
   { key:"dreadfang_shiv", name:"Dreadfang Shiv", multi:false, kph:true,
-    lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 } },
-  { key:"elemental_blade", name:"Elemental Blade", multi:false, kph:false }
+    lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 },
+    parts:[ { key:"main", label:"Dreadfang Shiv", default:true, min:1, max:20 } ] },
+  { key:"elemental_blade", name:"Elemental Blade", multi:false, kph:false,
+    parts:[ { key:"main", label:"Elemental Blade", default:true, min:1, max:20 } ] }
 ];
 
 /* =========================
@@ -1201,13 +1281,21 @@ const costData = {
    ========================= */
 function parseMult(str, fallback=1){
   if (typeof str !== "string") return fallback;
-  const s = str.trim().toLowerCase().replace(/×/g,'x');
+  const s = str.trim().toLowerCase().replace(/×/g,'x').replace(/,/g,'');
   if (!s) return fallback;
   const m = s.endsWith('x') ? s.slice(0,-1) : s;
   const v = Number(m);
   return Number.isFinite(v) && v > 0 ? v : fallback;
 }
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+// Attempts needed for a `conf` chance (e.g. 0.5, 0.9) of at least one success:
+// 1-(1-p)^n >= conf  ->  n = ceil( ln(1-conf) / ln(1-p) ). Mean (1/p) hides how
+// skewed these low-p upgrades are, so we surface confidence targets alongside it.
+function attemptsForConfidence(p, conf){
+  if (!(p > 0)) return Infinity;
+  if (p >= 1) return 1;
+  return Math.ceil(Math.log(1 - conf) / Math.log(1 - p));
+}
 function fmtNum(n){
   if (!Number.isFinite(n)) return "—";
   const abs = Math.abs(n);
@@ -1265,9 +1353,6 @@ function getBoostMult(){
 
   if (chkAura.checked) base *= 1.5;
 
-  // cap at 6.00x
-  base = Math.min(base, 6.0);
-
   return base;
 }
 const inpCampLvl = document.getElementById("inpCampLvl");
@@ -1297,6 +1382,44 @@ document.getElementById("btnReset").addEventListener("click", () => resetAll());
 });
 
 /* =========================
+   PERSISTENCE (localStorage)
+   Saves the global boost/reduction inputs, selected item, and KPH/loot so a
+   reload doesn't wipe your setup. Per-item level ranges default to full range.
+   ========================= */
+const LS_KEY = "harpagia_cost_calc_v1";
+function saveState(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      baseBoost: inpBaseBoost.value,
+      aura:      chkAura.checked,
+      campLvl:   inpCampLvl.value,
+      charm:     chkCharm.checked,
+      medium:    chkMedium.checked,
+      artisan:   chkArtisan.checked,
+      item:      selItem.value,
+      kph:       inpKPH.value,
+      lootMult:  inpLootMult.value
+    }));
+  } catch(e){ /* storage unavailable — ignore */ }
+}
+function loadState(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw) || {};
+    if (typeof s.baseBoost === "string") inpBaseBoost.value = s.baseBoost;
+    chkAura.checked    = !!s.aura;
+    if (s.campLvl != null) inpCampLvl.value = s.campLvl;
+    chkCharm.checked   = !!s.charm;
+    chkMedium.checked  = !!s.medium;
+    chkArtisan.checked = !!s.artisan;
+    if (s.item && ITEMS.some(i => i.key === s.item && !i.hidden)) selItem.value = s.item;
+    if (typeof s.kph === "string") inpKPH.value = s.kph;
+    if (typeof s.lootMult === "string") inpLootMult.value = s.lootMult;
+  } catch(e){ /* corrupt data — ignore */ }
+}
+
+/* =========================
    BUILD ITEM DROPDOWN
    ========================= */
 function init(){
@@ -1316,6 +1439,7 @@ function init(){
     recalcAll();
   });
 
+  loadState();      // restore saved inputs (may change selItem) before first render
   rebuildLevelInputs();
   recalcAll();
 }
@@ -1456,31 +1580,9 @@ function rebuildLevelInputs(){
 
   if (!item) return;
 
-  if (item.special === "ratio3"){
-    levelsArea.appendChild(levelRangeBlock("helmet", "Abyssal Helmet", true, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("greaves", "Abyssal Greaves", true, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("chestplate", "Abyssal Chestplate", true, 1, 20));
-    return;
+  for (const p of item.parts){
+    levelsArea.appendChild(levelRangeBlock(p.key, p.label, p.default, p.min, p.max));
   }
-  if (item.special === "viridian3"){
-    levelsArea.appendChild(levelRangeBlock("helmet", "Viridian Helmet", true, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("greaves", "Viridian Greaves", true, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("chestplate", "Viridian Chestplate", true, 1, 20));
-    return;
-  }
-  if (item.special === "primordial5"){
-    levelsArea.appendChild(levelRangeBlock("power", "Power Amulet", false, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("speed", "Speed Amulet", false, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("weaponry", "Weaponry Amulet", false, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("defence", "Defence Amulet", false, 1, 20));
-    levelsArea.appendChild(levelRangeBlock("primordial", "Primordial Amulet", true, 1, 20));
-    return;
-  }
-  if (item.special === "aether"){
-    levelsArea.appendChild(levelRangeBlock("main", "Aether Blade", true, 1, 40));
-    return;
-  }
-  levelsArea.appendChild(levelRangeBlock("main", item.name, true, 1, 20));
 }
 
 /* =========================
@@ -1493,24 +1595,8 @@ function getUpgradeChanceForLevel(level, boostMult, itemKey){
 }
 function prettyPartLabel(item, partKey){
   if (!item) return partKey;
-  if (item.key === "abyssal_gear"){
-    if (partKey==="helmet") return "Abyssal Helmet";
-    if (partKey==="greaves") return "Abyssal Greaves";
-    if (partKey==="chestplate") return "Abyssal Chestplate";
-  }
-  if (item.key === "viridian_gear"){
-    if (partKey==="helmet") return "Viridian Helmet";
-    if (partKey==="greaves") return "Viridian Greaves";
-    if (partKey==="chestplate") return "Viridian Chestplate";
-  }
-  if (item.key === "primordial_amulet"){
-    if (partKey==="power") return "Power Amulet";
-    if (partKey==="speed") return "Speed Amulet";
-    if (partKey==="weaponry") return "Weaponry Amulet";
-    if (partKey==="defence") return "Defence Amulet";
-    if (partKey==="primordial") return "Primordial Amulet";
-  }
-  return item.name;
+  const p = item.parts && item.parts.find(x => x.key === partKey);
+  return p ? p.label : item.name;
 }
 function getSelectedPartsFromContainer(containerEl, itemKey){
   const item = ITEMS.find(x=>x.key===itemKey);
@@ -1675,6 +1761,7 @@ function calcKPHSectionForItem(itemKey, totalResourcesNeeded, kph, lootMult){
      renderStatsPage(boostMult, red);
      renderCalculatorOutput(boostMult, red.total);
      renderSummaryPage(true);
+     saveState();
    }
 
    function syncInputsToSummary(){
@@ -1725,130 +1812,134 @@ function renderCalculatorOutput(boostMult, reductionMult){
 
   outputLog.innerHTML = "";
 
-  const swapped = parts.filter(p => p.enabled && p.cur > p.tgt);
-  if (swapped.length){
-    const swapWarn = document.createElement("div");
-    swapWarn.className = "warn";
-    swapWarn.style.marginBottom = "10px";
-    swapWarn.textContent = `Warning: current level is higher than target for ${swapped.map(p=>p.label).join(", ")}. Values have been swapped to calculate.`;
-    outputLog.appendChild(swapWarn);
-  }
-
-  const top = document.createElement("div");
-  top.className = "sec";
-  top.innerHTML = `
-    <h3>Totals</h3>
-    <div class="kv" style="margin-bottom:10px;">
-      <div class="k">Selected item</div><div class="v gold">${item?.name || "—"}</div>
-      <div class="k">Total average upgrade attempts</div><div class="v blue">${fmtNum(totalAttemptsAll)}</div>
-      <div class="k">Resource reduction multiplier applied</div><div class="v">${reductionMult.toFixed(4)}x</div>
-    </div>
-  `;
-  outputLog.appendChild(top);
-
-  const resBox = document.createElement("div");
-  resBox.className = "sec";
-  const resRows = Object.entries(totalsByRes)
-    .sort((a,b)=> b[1]-a[1])
-    .map(([r,amt])=> `<tr><td>${r}</td><td class="right">${fmtNum(amt)}</td></tr>`)
-    .join("");
-  resBox.innerHTML = `
-    <h3>Total resources required</h3>
-    <table class="smalltable">
-      <thead><tr><th>Resource</th><th class="right">Expected amount</th></tr></thead>
-      <tbody>${resRows || `<tr><td colspan="2" style="color:var(--muted)">No cost data pasted yet (placeholders are empty).</td></tr>`}</tbody>
-    </table>
-  `;
-  outputLog.appendChild(resBox);
-
-  if (item?.kph){
-    const kphWrap = document.createElement("div");
-    kphWrap.className = "sec";
-
-    const k = kphSection;
-    if (!k){
-      kphWrap.innerHTML = `<h3>Loot / time</h3><div class="mutedbox">No loot model available.</div>`;
-    } else {
-      const lootMult = parseMult(inpLootMult.value, 1);
-      const kph = Number(inpKPH.value || 0);
-      kphWrap.innerHTML = `
-        <h3>Loot / time (optional)</h3>
-        ${k.note ? `<div class="mutedbox" style="margin-bottom:10px;">${k.note}</div>` : ""}
-        <div class="kv" style="margin-bottom:10px;">
-          <div class="k">Loot resource</div><div class="v gold">${k.lootRes}</div>
-          <div class="k">Loot per kill</div><div class="v">${fmtNum(k.basePerKill)}</div>
-          <div class="k">Boosted loot per kill</div><div class="v">${fmtNum(k.boostedPerKill)} <span style="color:var(--muted); font-weight:600;">(${lootMult.toFixed(3)}x)</span></div>
-          <div class="k">Loot/hour</div><div class="v blue">${fmtNum(k.lootPerHour)} <span style="color:var(--muted); font-weight:600;">(@ ${fmtNum(kph)} KPH)</span></div>
-          <div class="k">Total kills for required loot</div><div class="v blue">${fmtNum(k.killsNeeded)}</div>
-          <div class="k">Total time</div><div class="v gold">${k.time}</div>
-        </div>
-      `;
-    }
-
-    outputLog.appendChild(kphWrap);
-  }
-
-  const breakdown = document.createElement("div");
-  breakdown.className = "sec";
-
-  let html = `<h3>More info — per upgrade</h3>`;
+  // Nothing selected (multi-item with every part unchecked)
   if (!partResults.length){
-    html += `<div class="warn">No parts selected. For multi-items, make sure at least one checkbox is enabled.</div>`;
-    breakdown.innerHTML = html;
-    outputLog.appendChild(breakdown);
+    outputLog.innerHTML = `<div class="warn">No parts selected. For multi-part items, enable at least one checkbox in the Item + Level Range box.</div>`;
     return;
   }
 
+  const dispRes    = getDisplayResourceForBreakdown(itemKey);
+  const primaryAmt = totalsByRes[dispRes] ?? 0;
+  const resEntries = Object.entries(totalsByRes).sort((a,b)=> b[1]-a[1]);
+  const kph        = item?.kph ? Number(inpKPH.value || 0) : 0;
+  const lootMult   = item?.kph ? parseMult(inpLootMult.value, 1) : 1;
+
+  const rangeSummary = partResults.length === 1
+    ? `Levels ${partResults[0].res.cur}→${partResults[0].res.tgt}`
+    : `${partResults.length} parts`;
+
+  let html = "";
+
+  // Swap notice
+  const swapped = parts.filter(p => p.enabled && p.cur > p.tgt);
+  if (swapped.length){
+    html += `<div class="warn" style="margin-bottom:12px;">Heads up: current level is above target for ${swapped.map(p=>p.label).join(", ")} — values were swapped to calculate.</div>`;
+  }
+
+  // Luck range for the primary resource: cost if every level runs to its 50% /
+  // 90% success mark. Sim-free — same per-level confidence method as the Stats
+  // page (attemptsForConfidence). The hero cost above is the exact expected mean.
+  let cost50 = 0, cost90 = 0, expFromLevels = 0;
   for (const pr of partResults){
-    const dispRes = getDisplayResourceForBreakdown(itemKey);
-
-    const rows = pr.res.perLevel.map(L => {
-      let shownVal = 0;
-
-      if (dispRes){
-        shownVal = (L.expectedCostMap && Number.isFinite(L.expectedCostMap[dispRes]))
-          ? L.expectedCostMap[dispRes]
-          : 0;
-      } else if (L.expectedCostMap && Number.isFinite(L.expectedCostMap["Gold"])) {
-        shownVal = L.expectedCostMap["Gold"];
-      } else {
-        shownVal = L.levelCostTotal || 0;
+    for (const L of pr.res.perLevel){
+      const c = (L.expectedCostMap && Number.isFinite(L.expectedCostMap[dispRes])) ? L.expectedCostMap[dispRes] : 0;
+      if (c > 0 && L.chance > 0){
+        // c = costPerAttempt × (1/chance) × reduction, so c×chance = costPerAttempt×reduction
+        const unit = c * L.chance;
+        expFromLevels += c;
+        cost50 += unit * attemptsForConfidence(L.chance, 0.5);
+        cost90 += unit * attemptsForConfidence(L.chance, 0.9);
       }
+    }
+  }
+  const flatRemainder = Math.max(0, primaryAmt - expFromLevels); // e.g. primordial flat merge (deterministic)
+  cost50 += flatRemainder; cost90 += flatRemainder;
+  const showRange = resEntries.length && cost90 > cost50 * 1.001;
 
-      return `
-        <tr>
-          <td>→ ${L.level}</td>
-          <td class="right">${fmtPct(L.chance)}</td>
-          <td class="right">${fmtNum(L.attempts)}</td>
-          <td class="right">${fmtNum(shownVal)}</td>
-        </tr>
-      `;
-    }).join("");
+  // HERO — the headline: what it costs (and, for loot items, how long to farm)
+  const heroCost = resEntries.length
+    ? `${fmtNum(primaryAmt)} <span class="hero-unit">${dispRes}</span>`
+    : `<span style="font-size:18px;">Nothing to upgrade in this range</span>`;
+  const heroRange = showRange
+    ? `<div class="hero-range" title="Cost if every level runs to its 50% / 90% success mark (per-level, same method as the Stats page). The figure above is the exact expected (average) cost.">
+         <span class="lo">50%: <b>${fmtNum(cost50)}</b></span> &middot; <span class="hi">90%: <b>${fmtNum(cost90)}</b></span>
+       </div>
+       <div class="hero-note"><span class="lo">50% = expected lucky run</span> &middot; <span class="hi">90% = expected unlucky run</span></div>`
+    : "";
+  const heroTime = (kphSection && kphSection.time && kphSection.time !== "—")
+    ? `<div class="hero-time">⏱ ${kphSection.time} to farm</div>` : "";
+  html += `
+    <div class="result-hero">
+      <div class="hero-cost">${heroCost}</div>
+      ${heroRange}
+      <div class="hero-sub">${item?.name || "—"} &middot; ${rangeSummary}</div>
+      ${heroTime}
+    </div>`;
 
+  // CHIPS — supporting stats, de-emphasized
+  const chips = [
+    `<span class="statchip"><b>${fmtNum(totalAttemptsAll)}</b> avg attempts</span>`,
+    `<span class="statchip"><b>${reductionMult.toFixed(4)}x</b> reduction</span>`
+  ];
+  if (item?.kph && kphSection){
+    chips.push(`<span class="statchip"><b>${fmtNum(kph)}</b> KPH</span>`);
+    chips.push(`<span class="statchip"><b>${fmtNum(kphSection.lootPerHour)}</b> ${kphSection.lootRes}/hr</span>`);
+    chips.push(`<span class="statchip"><b>${fmtNum(kphSection.killsNeeded)}</b> kills</span>`);
+  }
+  html += `<div class="chiprow">${chips.join("")}</div>`;
+
+  // ALL RESOURCES — only worth a table when there's more than one
+  if (resEntries.length > 1){
+    const resRows = resEntries.map(([r,amt])=> `<tr><td>${r}</td><td class="right">${fmtNum(amt)}</td></tr>`).join("");
     html += `
+      <div class="sec">
+        <h3>All resources</h3>
+        <table class="smalltable">
+          <thead><tr><th>Resource</th><th class="right">Expected amount</th></tr></thead>
+          <tbody>${resRows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // DETAILS — loot/time granularity + per-level breakdown, collapsed by default
+  let details = "";
+  if (item?.kph && kphSection){
+    details += `
+      ${kphSection.note ? `<div class="mutedbox" style="margin:8px 0;">${kphSection.note}</div>` : ""}
+      <div class="kv" style="margin:8px 0 14px;">
+        <div class="k">Loot resource</div><div class="v gold">${kphSection.lootRes}</div>
+        <div class="k">Loot per kill</div><div class="v">${fmtNum(kphSection.basePerKill)}</div>
+        <div class="k">Boosted loot per kill</div><div class="v">${fmtNum(kphSection.boostedPerKill)} <span style="color:var(--muted); font-weight:600;">(${lootMult.toFixed(3)}x)</span></div>
+        <div class="k">Loot / hour</div><div class="v blue">${fmtNum(kphSection.lootPerHour)} <span style="color:var(--muted); font-weight:600;">(@ ${fmtNum(kph)} KPH)</span></div>
+        <div class="k">Total kills for required loot</div><div class="v blue">${fmtNum(kphSection.killsNeeded)}</div>
+        <div class="k">Total time</div><div class="v gold">${kphSection.time}</div>
+      </div>`;
+  }
+  for (const pr of partResults){
+    const rows = pr.res.perLevel.map(L => {
+      const shownVal = (L.expectedCostMap && Number.isFinite(L.expectedCostMap[dispRes])) ? L.expectedCostMap[dispRes]
+                     : (L.expectedCostMap && Number.isFinite(L.expectedCostMap["Gold"]) ? L.expectedCostMap["Gold"]
+                     : (L.levelCostTotal || 0));
+      return `<tr><td>→ ${L.level}</td><td class="right">${fmtPct(L.chance)}</td><td class="right">${fmtNum(L.attempts)}</td><td class="right">${fmtNum(shownVal)}</td></tr>`;
+    }).join("");
+    details += `
       <div class="mutedbox" style="margin-bottom:8px;">
         <span class="pill"><b style="color:var(--gold)">${pr.part.label}</b></span>
         <span class="pill">Levels ${pr.res.cur} → ${pr.res.tgt}</span>
         <span class="pill">Avg attempts: <b style="color:var(--blue)">${fmtNum(pr.res.totalAttempts)}</b></span>
       </div>
       <table class="smalltable" style="margin-bottom:12px;">
-        <thead>
-          <tr>
-            <th>Upgrade</th>
-            <th class="right">Chance</th>
-            <th class="right">Avg attempts</th>
-            <th class="right">Expected cost${dispRes ? ` (${dispRes})` : ""}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows || `<tr><td colspan="4" style="color:var(--muted)">No levels to upgrade.</td></tr>`}
-        </tbody>
-      </table>
-    `;
+        <thead><tr><th>Upgrade</th><th class="right">Chance</th><th class="right">Avg attempts</th><th class="right">Expected cost${dispRes ? ` (${dispRes})` : ""}</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="4" style="color:var(--muted)">No levels to upgrade.</td></tr>`}</tbody>
+      </table>`;
   }
+  html += `
+    <details class="breakdown">
+      <summary>Per-level breakdown${item?.kph ? " &amp; loot / time" : ""}</summary>
+      <div style="margin-top:10px;">${details}</div>
+    </details>`;
 
-  breakdown.innerHTML = html;
-  outputLog.appendChild(breakdown);
+  outputLog.innerHTML = html;
 }
 
 function renderStatsPage(boostMult, red){
@@ -1870,6 +1961,8 @@ function renderStatsPage(boostMult, red){
     const base = BASE_CHANCE[L] ?? 0;
     const your = clamp(base * boostMult, 0, 1);
     const att = your > 0 ? (1/your) : Infinity;
+    const c50 = attemptsForConfidence(your, 0.5);
+    const c90 = attemptsForConfidence(your, 0.9);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1877,6 +1970,8 @@ function renderStatsPage(boostMult, red){
       <td class="right">${fmtPct(base)}</td>
       <td class="right">${fmtPct(your)}</td>
       <td class="right">${Number.isFinite(att) ? fmtNum(att) : "∞"}</td>
+      <td class="right">${Number.isFinite(c50) ? fmtNum(c50) : "∞"}</td>
+      <td class="right">${Number.isFinite(c90) ? fmtNum(c90) : "∞"}</td>
     `;
     chanceTableBody.appendChild(tr);
   }
@@ -1963,24 +2058,8 @@ function buildSummaryRangesUI(itemKey, containerEl){
     return wrap;
   };
 
-  if (item.special === "ratio3"){
-    box.appendChild(makeBlock("helmet","Abyssal Helmet", true, 1, 20));
-    box.appendChild(makeBlock("greaves","Abyssal Greaves", true, 1, 20));
-    box.appendChild(makeBlock("chestplate","Abyssal Chestplate", true, 1, 20));
-  } else if (item.special === "viridian3"){
-    box.appendChild(makeBlock("helmet","Viridian Helmet", true, 1, 20));
-    box.appendChild(makeBlock("greaves","Viridian Greaves", true, 1, 20));
-    box.appendChild(makeBlock("chestplate","Viridian Chestplate", true, 1, 20));
-  } else if (item.special === "primordial5"){
-    box.appendChild(makeBlock("power","Power Amulet", false, 1, 20));
-    box.appendChild(makeBlock("speed","Speed Amulet", false, 1, 20));
-    box.appendChild(makeBlock("weaponry","Weaponry Amulet", false, 1, 20));
-    box.appendChild(makeBlock("defence","Defence Amulet", false, 1, 20));
-    box.appendChild(makeBlock("primordial","Primordial Amulet", true, 1, 20));
-  } else if (item.special === "aether"){
-    box.appendChild(makeBlock("main","Aether Blade", true, 1, 40));
-  } else {
-    box.appendChild(makeBlock("main", item.name, true, 1, 20));
+  for (const p of item.parts){
+    box.appendChild(makeBlock(p.key, p.label, p.default, p.min, p.max));
   }
 
   // hook events
@@ -1992,32 +2071,7 @@ function buildSummaryRangesUI(itemKey, containerEl){
 
 function getDefaultPartsForItem(itemKey){
   const item = ITEMS.find(x=>x.key===itemKey);
-  const max = (itemKey==="aether_blade") ? 40 : 20;
-
-  if (item.special === "ratio3"){
-    return [
-      {partKey:"helmet", label:"Abyssal Helmet", enabled:true, cur:1, tgt:max},
-      {partKey:"greaves", label:"Abyssal Greaves", enabled:true, cur:1, tgt:max},
-      {partKey:"chestplate", label:"Abyssal Chestplate", enabled:true, cur:1, tgt:max},
-    ];
-  }
-  if (item.special === "viridian3"){
-    return [
-      {partKey:"helmet", label:"Viridian Helmet", enabled:true, cur:1, tgt:max},
-      {partKey:"greaves", label:"Viridian Greaves", enabled:true, cur:1, tgt:max},
-      {partKey:"chestplate", label:"Viridian Chestplate", enabled:true, cur:1, tgt:max},
-    ];
-  }
-  if (item.special === "primordial5"){
-    return [
-      {partKey:"power", label:"Power Amulet", enabled:false, cur:1, tgt:max},
-      {partKey:"speed", label:"Speed Amulet", enabled:false, cur:1, tgt:max},
-      {partKey:"weaponry", label:"Weaponry Amulet", enabled:false, cur:1, tgt:max},
-      {partKey:"defence", label:"Defence Amulet", enabled:false, cur:1, tgt:max},
-      {partKey:"primordial", label:"Primordial Amulet", enabled:true, cur:1, tgt:max},
-    ];
-  }
-  return [{partKey:"main", label:item.name, enabled:true, cur:1, tgt:max}];
+  return item.parts.map(p => ({ partKey:p.key, label:p.label, enabled:p.default, cur:1, tgt:p.max }));
 }
 
 function readSummaryParts(itemKey){
@@ -2170,7 +2224,7 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
 /* =========================
    MARKET VALUE PAGE
    ========================= */
-const MARKET_BOOST = 6.0;
+// Market pricing follows your actual boost (getBoostMult) — no fixed cap.
 const MARKET_REDUCTION = 0.8 * 0.5 * 0.98 * 0.95; // camp 20 + charm + medium + artisan = 0.3724
 
 const PRICE_CATALOG = [
@@ -2211,7 +2265,7 @@ function calcTotalPrimaryRSS(entry, toLevel){
   if (!primaryRes) return 0;
   let total = 0;
   for (let L = 2; L <= toLevel; L++){
-    const p = getUpgradeChanceForLevel(L, MARKET_BOOST, entry.itemKey);
+    const p = getUpgradeChanceForLevel(L, getBoostMult(), entry.itemKey);
     const attempts = p > 0 ? 1/p : 0;
     let costMap = costTable[L] || {};
     if (entry.itemKey === "abyssal_gear" && entry.partKey !== "helmet"){
@@ -2231,7 +2285,7 @@ function buildInvestmentCumulative(entry){
   const primaryRes = getMarketPrimaryResource(entry);
   const cum = [0];
   for (let L = 2; L <= entry.maxLevel; L++){
-    const p = getUpgradeChanceForLevel(L, MARKET_BOOST, entry.itemKey);
+    const p = getUpgradeChanceForLevel(L, getBoostMult(), entry.itemKey);
     const attempts = p > 0 ? 1/p : 0;
     let costMap = costTable[L] || {};
     if (entry.itemKey === "abyssal_gear" && entry.partKey !== "helmet"){
@@ -2390,7 +2444,7 @@ function renderFarmOutput(){
   farmInputs.style.display = "";
 
   const kph      = parseFloat(document.getElementById("farmKPH").value) || 0;
-  const multStr  = (document.getElementById("farmLootMult").value || "1").replace(/[x×]/gi, "");
+  const multStr  = (document.getElementById("farmLootMult").value || "1").replace(/[x×,]/gi, "");
   const lootMult = parseFloat(multStr) || 1;
   const waiting  = `<div class="mini">Enter kills per hour to see stats.</div>`;
 
@@ -2444,17 +2498,22 @@ function renderFarmOutput(){
     </div>`;
 }
 
+// Module scope so it stays callable on every initMarketPage() call, not just
+// the first (a block-scoped declaration here silently breaks on repeat visits).
+function updateAmuletNote(){
+  const sel = document.getElementById("mktSelItem");
+  const amuletNote = document.getElementById("mktAmuletNote");
+  if (!sel || !amuletNote) return;
+  const v = sel.value;
+  amuletNote.style.display = (v === "primordial_amulet__base" || v === "primordial_amulet__primordial") ? "" : "none";
+}
+
 let marketInitialized = false;
 function initMarketPage(){
   if (!marketInitialized){
     buildMarketDropdown();
     const sel = document.getElementById("mktSelItem");
     const lvlInp = document.getElementById("mktLevel");
-    const amuletNote = document.getElementById("mktAmuletNote");
-    function updateAmuletNote(){
-      const v = sel.value;
-      amuletNote.style.display = (v === "primordial_amulet__base" || v === "primordial_amulet__primordial") ? "" : "none";
-    }
     sel.addEventListener("change", ()=>{
       const entry = PRICE_CATALOG.find(x => x.key === sel.value);
       if (entry){
@@ -2548,6 +2607,7 @@ function resetAll(){
   // clear summary grid so it rebuilds clean
   summaryGrid.innerHTML = "";
 
+  try { localStorage.removeItem(LS_KEY); } catch(e){}
   recalcAll();
 }
 
