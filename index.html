@@ -610,6 +610,11 @@
               is included <strong>only</strong> if one or more base amulets
               (Power, Speed, Weaponry, Defence) are selected.
             </div>
+            <div id="sunforgedNote" class="ok" style="display:none;">
+              We have only gotten helm to level 20, so some upgrades are
+              unconfirmed, but due to the linear nature, current cost can be
+              assumed to be correct.
+            </div>
             <div id="abyssalNote" class="ok" style="display:none;">
               For abyssal axe, use abyssal chestplate for calculation.
               Gold will be exactly the same but the other materials will vary,
@@ -973,6 +978,13 @@ const ITEMS = [
       { key:"greaves",    label:"Viridian Greaves",    default:true, min:1, max:20 },
       { key:"chestplate", label:"Viridian Chestplate", default:true, min:1, max:20 },
     ] },
+  { key:"sunforged_gear", name:"Sunforged Gear", multi:true, kph:true, special:"sunforged3",
+    lootResource:"Sunforged Fragments", lootPerKill:{ "Sunforged Fragments":0.0396 },
+    parts:[
+      { key:"helmet",     label:"Sunforged Helm",       default:true, min:1, max:20 },
+      { key:"greaves",    label:"Sunforged Greaves",    default:true, min:1, max:20 },
+      { key:"chestplate", label:"Sunforged Chestplate", default:true, min:1, max:20 },
+    ] },
   { key:"dreadfang_shiv", name:"Dreadfang Shiv", multi:false, kph:true,
     lootResource:"Dreadfang Fragments", lootPerKill:{ "Dreadfang Fragments":450 },
     parts:[ { key:"main", label:"Dreadfang Shiv", default:true, min:1, max:20 } ] },
@@ -991,6 +1003,7 @@ const costData = {
   dreadfang_shiv: { main: {} },
   aether_blade: { main: {} },
   viridian_gear: { helmet: {}, greaves: {}, chestplate: {} },
+  sunforged_gear: { helmet: {}, greaves: {}, chestplate: {} },
   abyssal_gear: { helmet: {} },
   primordial_amulet: { base_amulet: {}, primordial: {} },
   elemental_blade: { main: {} }
@@ -1164,6 +1177,77 @@ const costData = {
   }
 })();
 
+// 6b) Sunforged Helm/Greaves/Chest: costData.sunforged_gear.helmet[level], etc.
+// Sunforged Gear — Helm / Greaves / Chestplate costs (levels 2..20)
+// Same shape as Viridian: cost to go from rank N to N+1 is linear in N, and the
+// slots sit at a clean 1:2:3 ratio. Sunforged fragments are exactly 5x the
+// Viridian fragment cost per slot.
+// Soulstone Fragments are carried in the cost map so they show up in the totals,
+// but they are NOT the loot resource — like Sigil Fragments on Treanth, we do not
+// farm-time them (Solaris drops ~495/kill, so they are never the gating drop).
+(() => {
+  const helmet = [
+    5, 10, 15, 20, 25,
+    30, 35, 40, 45, 50,
+    55, 60, 65, 70, 75,
+    80, 85, 90, 95
+  ];
+
+  const greaves = [
+    10, 20, 30, 40, 50,
+    60, 70, 80, 90, 100,
+    110, 120, 130, 140, 150,
+    160, 170, 180, 190
+  ];
+
+  const chestplate = [
+    15, 30, 45, 60, 75,
+    90, 105, 120, 135, 150,
+    165, 180, 195, 210, 225,
+    240, 255, 270, 285
+  ];
+
+  const helmetSoul = [
+    150000, 300000, 450000, 600000, 750000,
+    900000, 1050000, 1200000, 1350000, 1500000,
+    1650000, 1800000, 1950000, 2100000, 2250000,
+    2400000, 2550000, 2700000, 2850000
+  ];
+
+  const greavesSoul = [
+    300000, 600000, 900000, 1200000, 1500000,
+    1800000, 2100000, 2400000, 2700000, 3000000,
+    3300000, 3600000, 3900000, 4200000, 4500000,
+    4800000, 5100000, 5400000, 5700000
+  ];
+
+  const chestplateSoul = [
+    600000, 1200000, 1800000, 2400000, 3000000,
+    3600000, 4200000, 4800000, 5400000, 6000000,
+    6600000, 7200000, 7800000, 8400000, 9000000,
+    9600000, 10200000, 10800000, 11400000
+  ];
+
+  for (let i = 0; i < 19; i++){
+    const level = 2 + i;
+
+    costData.sunforged_gear.helmet[level] = {
+      "Sunforged Fragments": helmet[i],
+      "Soulstone Fragments": helmetSoul[i]
+    };
+
+    costData.sunforged_gear.greaves[level] = {
+      "Sunforged Fragments": greaves[i],
+      "Soulstone Fragments": greavesSoul[i]
+    };
+
+    costData.sunforged_gear.chestplate[level] = {
+      "Sunforged Fragments": chestplate[i],
+      "Soulstone Fragments": chestplateSoul[i]
+    };
+  }
+})();
+
 // 7) Abyssal Helmet ONLY: costData.abyssal_gear.helmet[level] = { "Gold":..., "Abyssal Components":..., "Eldritch":..., "Voidstone":..., "Orichalcum":... }
 // Abyssal Gear — Helmet costs (levels 2..20)
 (() => {
@@ -1326,6 +1410,7 @@ function getDisplayResourceForBreakdown(itemKey){
   if (itemKey === "abyssal_greataxe") return "Abyssal Shards";
   if (itemKey === "swift_blade") return "Anubian Shards";
   if (itemKey === "viridian_gear") return "Viridian Shards";
+  if (itemKey === "sunforged_gear") return "Sunforged Fragments";
   if (itemKey === "dreadfang_shiv") return "Dreadfang Fragments";
   if (itemKey === "aether_blade") return "Aether Shards";
   if (itemKey === "primordial_amulet") return "Amulet Fragments";
@@ -1341,6 +1426,7 @@ const levelsArea = document.getElementById("levelsArea");
 const outputLog = document.getElementById("outputLog");
 const aetherNote = document.getElementById("aetherNote");
 const primordialNote = document.getElementById("primordialNote");
+const sunforgedNote = document.getElementById("sunforgedNote");
 const abyssalNote = document.getElementById("abyssalNote");
 
 const outBoost = document.getElementById("outBoost");
@@ -1572,6 +1658,7 @@ function rebuildLevelInputs(){
 
   aetherNote.style.display = (item?.special === "aether") ? "block" : "none";
   primordialNote.style.display = (item?.key === "primordial_amulet") ? "block" : "none";
+  sunforgedNote.style.display = (item?.key === "sunforged_gear") ? "block" : "none";
   abyssalNote.style.display = (item?.key === "abyssal_gear") ? "block" : "none";
 
   const kphSupported = !!item?.kph;
@@ -2240,8 +2327,20 @@ const PRICE_CATALOG = [
   { key:"viridian_gear__helmet",         label:"Viridian Helmet",     itemKey:"viridian_gear",      partKey:"helmet",      lvl1:50,   lvlMax:1000,  maxLevel:20 },
   { key:"viridian_gear__greaves",        label:"Viridian Greaves",    itemKey:"viridian_gear",      partKey:"greaves",     lvl1:100,  lvlMax:2000,  maxLevel:20 },
   { key:"viridian_gear__chestplate",     label:"Viridian Chestplate", itemKey:"viridian_gear",      partKey:"chestplate",  lvl1:150,  lvlMax:3000,  maxLevel:20 },
+  // Sunforged: full set at max level = 50,000 gems, covering BOTH cost resources.
+  // Soulstone Fragments are priced at the market rate of 5 gems / 1,000,000, which at
+  // max-efficiency reduction works out to ~26% of the set's value (~13k gems); the
+  // remaining ~37k is the Sunforged Fragment share, split 1:2:3 on cost per rank.
+  // Net ratio 8:16:26 — the chest sits above 1:2:3 because its soulstone cost is 4x
+  // the helm's, not 3x. Stable across boost: 3.77x-10x moves each price under 3%.
+  // Lvl 1 price = 5% of lvlMax (Viridian convention: 50/1000, 100/2000, 150/3000).
+  { key:"sunforged_gear__helmet",        label:"Sunforged Helm",      itemKey:"sunforged_gear",     partKey:"helmet",      lvl1:400,  lvlMax:8000,  maxLevel:20 },
+  { key:"sunforged_gear__greaves",       label:"Sunforged Greaves",   itemKey:"sunforged_gear",     partKey:"greaves",     lvl1:800,  lvlMax:16000, maxLevel:20 },
+  { key:"sunforged_gear__chestplate",    label:"Sunforged Chestplate",itemKey:"sunforged_gear",     partKey:"chestplate",  lvl1:1300, lvlMax:26000, maxLevel:20 },
   { key:"dreadfang_shiv__main",          label:"Dreadfang Shiv",      itemKey:"dreadfang_shiv",     partKey:"main",        lvl1:400,  lvlMax:4000,  maxLevel:20 },
-  { key:"elemental_blade__main",         label:"Elemental Blade",     itemKey:"elemental_blade",    partKey:"main",        lvl1:99999, lvlMax:99999, maxLevel:20 },
+  // Flat 15,000 gems at every level, based on a live market offer at that price.
+  // Not scaled by level yet — revisit once more trades set a real curve.
+  { key:"elemental_blade__main",         label:"Elemental Blade",     itemKey:"elemental_blade",    partKey:"main",        lvl1:15000, lvlMax:15000, maxLevel:20 },
 ];
 
 function getMarketPrimaryResource(entry){
@@ -2253,6 +2352,7 @@ function getMarketPrimaryResource(entry){
     "abyssal_greataxe":  "Abyssal Shards",
     "swift_blade":       "Anubian Shards",
     "viridian_gear":     "Viridian Shards",
+    "sunforged_gear":    "Sunforged Fragments",
     "dreadfang_shiv":    "Dreadfang Fragments",
     "elemental_blade":   "Ruby",
   };
