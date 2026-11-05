@@ -610,11 +610,6 @@
               is included <strong>only</strong> if one or more base amulets
               (Power, Speed, Weaponry, Defence) are selected.
             </div>
-            <div id="sunforgedNote" class="ok" style="display:none;">
-              We have only gotten helm to level 20, so some upgrades are
-              unconfirmed, but due to the linear nature, current cost can be
-              assumed to be correct.
-            </div>
             <div id="abyssalNote" class="ok" style="display:none;">
               For abyssal axe, use abyssal chestplate for calculation.
               Gold will be exactly the same but the other materials will vary,
@@ -1426,7 +1421,6 @@ const levelsArea = document.getElementById("levelsArea");
 const outputLog = document.getElementById("outputLog");
 const aetherNote = document.getElementById("aetherNote");
 const primordialNote = document.getElementById("primordialNote");
-const sunforgedNote = document.getElementById("sunforgedNote");
 const abyssalNote = document.getElementById("abyssalNote");
 
 const outBoost = document.getElementById("outBoost");
@@ -1658,7 +1652,6 @@ function rebuildLevelInputs(){
 
   aetherNote.style.display = (item?.special === "aether") ? "block" : "none";
   primordialNote.style.display = (item?.key === "primordial_amulet") ? "block" : "none";
-  sunforgedNote.style.display = (item?.key === "sunforged_gear") ? "block" : "none";
   abyssalNote.style.display = (item?.key === "abyssal_gear") ? "block" : "none";
 
   const kphSupported = !!item?.kph;
